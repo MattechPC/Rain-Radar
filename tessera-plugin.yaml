@@ -1,9 +1,5 @@
-# The manifest: who made the plugin, what it may do, and what the Tessera app shows. It holds no code and no words:
-# every name, label and hint below is a key into translations/<language>.json, part "app".
-# Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.1.2
-# 0.10 is the first API with pictures on a tile (ui::picture, ui::set_picture).
+version: 0.1.4
 api: "0.10"
 icon: weather-pouring
 maintainer: MattechPC
@@ -16,9 +12,6 @@ boards: any
 flash_kb: 6
 
 permissions:
-  # api.rainviewer.com: the list of radar frames (the only supported RainViewer endpoint).
-  # tilecache.rainviewer.com: the radar tiles of a frame (the `host` the RainViewer API names).
-  # tile.openstreetmap.org: the standard OpenStreetMap map tiles.
   network: [api.rainviewer.com, tilecache.rainviewer.com, tile.openstreetmap.org]
 attributes: [cloud]
 privacy: https://github.com/MattechPC/Rain-Radar#privacy
@@ -27,20 +20,15 @@ tiles:
   - id: radar
     name: tile_name
     icon: weather-pouring
-    # Sizes updated from 1x1 to 4x4
     sizes: { min: 1x1, max: 4x4 }
-    # A few labels, a veil, a dot, four map places and four radar places, and a path of a few dozen characters.
     memory: 1800
-    # A map of 2 x 2 tiles with the radar over it: 4 places for the map and 4 for the radar.
     pictures: 8
     data: frames
     example: tile_example
     preview: { title: "{path}" }
     options:
-      # Where the map is centred, in degrees, such as 52.2297 and 21.0122 (a comma works as the decimal point).
       - { id: lat, kind: text, label: lat, hint: lat_hint, default: "52.2297" }
       - { id: lon, kind: text, label: lon, hint: lon_hint, default: "21.0122" }
-      # RainViewer's radar tiles go to zoom 7 at most; zoom 2 shows about a continent.
       - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 6, label: zoom, hint: zoom_hint }
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
@@ -50,9 +38,6 @@ tiles:
       - { id: snow, kind: toggle, label: snow, hint: snow_hint, default: true }
 
 fetch:
-  # The radar frames of the last two hours, one every ten minutes, as RainViewer lists them. The tile wants the newest,
-  # the last of the list: sorted newest first and cut to one. The `path` is used exactly as RainViewer gives it; the
-  # app asks every five minutes, which is also how often RainViewer refreshes (the app keeps the answer in between).
   - id: frames
     url: https://api.rainviewer.com/public/weather-maps.json
     every: 5m

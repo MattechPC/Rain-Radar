@@ -82,18 +82,11 @@ class RadarTile : public tessera::Tile {
       top_ = 0;
       locate();
 
-      lv_obj_t *click_layer = ui::block(c.parent, theme::TRANSPARENT);
-      lv_obj_set_size(click_layer, width_, height_);
-      lv_obj_set_pos(click_layer, 0, 0);
-      ui::on_click(click_layer, [this, &c]() {
-        c.open_fullscreen();
-      });
-
       for (int layer = 0; layer < 2; ++layer) {
         if (layer == 0 && !show_map_) continue;
         for (int j = 0; j < GRID; ++j) {
           for (int i = 0; i < GRID; ++i) {
-            lv_obj_t *place = ui::picture(click_layer);
+            lv_obj_t *place = ui::picture(c.parent);
             lv_obj_set_size(place, tile_, tile_);
             lv_obj_set_pos(place, left_ + i * tile_, top_ + j * tile_);
             (layer == 0 ? map_places_ : radar_places_)[j * GRID + i] = place;
@@ -101,7 +94,7 @@ class RadarTile : public tessera::Tile {
         }
       }
 
-      veil_ = ui::block(click_layer, theme::CAMERA_PAGE);
+      veil_ = ui::block(c.parent, theme::CAMERA_PAGE);
       lv_obj_set_size(veil_, side_, side_);
       lv_obj_set_pos(veil_, left_, top_);
       lv_obj_remove_flag(veil_, LV_OBJ_FLAG_CLICKABLE);
@@ -111,13 +104,13 @@ class RadarTile : public tessera::Tile {
       if (show_marker_) {
         const int ring = ui::mm(3), dot = ui::mm(2);
         const int cx = left_ + static_cast<int>(std::lround(dx_ * side_)), cy = top_ + static_cast<int>(std::lround(dy_ * side_));
-        ring_ = ui::block(click_layer, theme::CARD);
+        ring_ = ui::block(c.parent, theme::CARD);
         lv_obj_set_size(ring_, ring, ring);
         lv_obj_set_pos(ring_, cx - ring / 2, cy - ring / 2);
         lv_obj_set_style_radius(ring_, LV_RADIUS_CIRCLE, 0);
         lv_obj_remove_flag(ring_, LV_OBJ_FLAG_CLICKABLE);
 
-        dot_ = ui::block(click_layer, theme::ACCENT);
+        dot_ = ui::block(c.parent, theme::ACCENT);
         lv_obj_set_size(dot_, dot, dot);
         lv_obj_set_pos(dot_, cx - dot / 2, cy - dot / 2);
         lv_obj_set_style_radius(dot_, LV_RADIUS_CIRCLE, 0);
