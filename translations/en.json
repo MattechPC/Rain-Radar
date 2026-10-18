@@ -37,8 +37,18 @@
     "snow": "Show snow",
     "snow_hint": "Draws snow in its own colours.",
     "zoom_factor": "Zoom Factor",
-    "zoom_factor_hint": "Digital zoom factor around the center point.",
+    "zoom_factor_hint": "Digital zoom factor around center.",
     "aspect_ratio": "Aspect Ratio",
-    "aspect_ratio_hint": "Select map aspect ratio (1:1, 4:3, 16:9, or Auto)."
+    "aspect_ratio_hint": "Select map grid aspect ratio.",
+    "zoom_factor_label": "Zoom Factor",
+    "zf_1x": "1x (Normal)",
+    "zf_125": "1.25x",
+    "zf_15": "1.5x",
+    "zf_2x": "2x (Zoom)",
+    "aspect_ratio_label": "Aspect Ratio",
+    "asp_auto": "Auto",
+    "asp_11": "1:1",
+    "asp_43": "4:3",
+    "asp_169": "16:9"
   }
 }
