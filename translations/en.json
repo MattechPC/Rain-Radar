@@ -1,5 +1,7 @@
 {
-  "_meta": { "name": "English" },
+  "_meta": {
+    "name": "English"
+  },
   "screen": {
     "credit_both": "© OpenStreetMap contributors · Weather data by RainViewer",
     "credit_radar": "Weather data by RainViewer",
@@ -33,6 +35,10 @@
     "smooth": "Smooth radar",
     "smooth_hint": "Blurs the radar data a little.",
     "snow": "Show snow",
-    "snow_hint": "Draws snow in its own colours."
+    "snow_hint": "Draws snow in its own colours.",
+    "zoom_factor": "Zoom Factor",
+    "zoom_factor_hint": "Digital zoom factor around the center point.",
+    "aspect_ratio": "Aspect Ratio",
+    "aspect_ratio_hint": "Select map aspect ratio (1:1, 4:3, 16:9, or Auto)."
   }
 }

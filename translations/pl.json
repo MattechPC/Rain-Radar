@@ -1,5 +1,7 @@
 {
-  "_meta": { "name": "Polski" },
+  "_meta": {
+    "name": "Polski"
+  },
   "screen": {
     "radar_at": "Radar {time}",
     "radar_old": "Radar jest nieaktualny",
@@ -31,6 +33,10 @@
     "smooth": "Wygładzony radar",
     "smooth_hint": "Lekko rozmywa dane radaru.",
     "snow": "Pokaż śnieg",
-    "snow_hint": "Rysuje śnieg osobnymi kolorami."
+    "snow_hint": "Rysuje śnieg osobnymi kolorami.",
+    "zoom_factor": "Współczynnik przybliżenia (Zoom)",
+    "zoom_factor_hint": "Cyfrowe przybliżenie środka mapy.",
+    "aspect_ratio": "Proporcje ekranu / kafelka",
+    "aspect_ratio_hint": "Wybierz proporcje widoku mapy (1:1, 4:3, 16:9 lub Auto)."
   }
 }

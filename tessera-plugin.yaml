@@ -1,5 +1,5 @@
 id: rain_radar
-version: 0.1.6
+version: 0.1.7
 api: "0.10"
 icon: weather-pouring
 maintainer: MattechPC
@@ -30,6 +30,10 @@ tiles:
       - { id: lat, kind: text, label: lat, hint: lat_hint, default: "52.2297" }
       - { id: lon, kind: text, label: lon, hint: lon_hint, default: "21.0122" }
       - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 6, label: zoom, hint: zoom_hint }
+      - { id: zoom_factor, kind: choice, label: zoom_factor, hint: zoom_factor_hint, default: "1.0",
+          choices: [{ value: "1.0", label: "1x (Normal)" }, { value: "1.25", label: "1.25x" }, { value: "1.5", label: "1.5x" }, { value: "2.0", label: "2x (Zoom)" }] }
+      - { id: aspect, kind: choice, label: aspect_ratio, hint: aspect_ratio_hint, default: "auto",
+          choices: [{ value: "auto", label: "Auto" }, { value: "1:1", label: "1:1" }, { value: "4:3", label: "4:3" }, { value: "16:9", label: "16:9" }] }
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
       - { id: map, kind: toggle, label: map, hint: map_hint, default: true }

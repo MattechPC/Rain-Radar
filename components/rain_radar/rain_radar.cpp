@@ -57,6 +57,13 @@ class RadarTile : public tessera::Tile {
     if (zoom_ < MIN_ZOOM) zoom_ = MIN_ZOOM;
     if (zoom_ > MAX_ZOOM) zoom_ = MAX_ZOOM;
     
+    std::string zf_str = c.options["zoom_factor"] | "1.0";
+    zoom_factor_ = std::strtod(zf_str.c_str(), nullptr);
+    if (zoom_factor_ < 1.0) zoom_factor_ = 1.0;
+    if (zoom_factor_ > 3.0) zoom_factor_ = 3.0;
+
+    aspect_ = c.options["aspect"] | "auto";
+
     bool lat_ok_parse = parse_degrees(c.options["lat"] | "", 85.0, &lat_);
     bool lon_ok_parse = parse_degrees(c.options["lon"] | "", 180.0, &lon_);
     has_position_ = lat_ok_parse && lon_ok_parse;
@@ -71,7 +78,32 @@ class RadarTile : public tessera::Tile {
 
     const bool room = ui::pictures() && has_position_;
     int avail_h = height_ - (is_small ? body : (credit_h + body + 2 * gap));
-    int side = std::min(width_, std::max(10, avail_h));
+    
+    int target_w = width_;
+    int target_h = avail_h;
+    if (aspect_ == "1:1") {
+      int side_box = std::min(width_, avail_h);
+      target_w = side_box;
+      target_h = side_box;
+    } else if (aspect_ == "4:3") {
+      if (width_ * 3 > avail_h * 4) {
+        target_h = avail_h;
+        target_w = avail_h * 4 / 3;
+      } else {
+        target_w = width_;
+        target_h = width_ * 3 / 4;
+      }
+    } else if (aspect_ == "16:9") {
+      if (width_ * 9 > avail_h * 16) {
+        target_h = avail_h;
+        target_w = avail_h * 16 / 9;
+      } else {
+        target_w = width_;
+        target_h = width_ * 9 / 16;
+      }
+    }
+
+    int side = std::min(target_w, target_h);
     tile_ = std::max(1, side / GRID);
     side_ = tile_ * GRID;
     map_ = room && side_ >= ui::px(32);
@@ -250,6 +282,8 @@ class RadarTile : public tessera::Tile {
 
   const tessera::Plugin *plugin_;
   int width_ = 0, height_ = 0, side_ = 0, tile_ = 0, left_ = 0, top_ = 0, zoom_ = 6, x0_ = 0, y0_ = 0;
+  double zoom_factor_ = 1.0;
+  std::string aspect_ = "auto";
   bool show_map_ = true, show_marker_ = true, smooth_ = true, snow_ = true, has_position_ = false, map_ = false;
   Look look_ = Look::AUTO;
   double lat_ = 0, lon_ = 0, dx_ = 0.5, dy_ = 0.5;
