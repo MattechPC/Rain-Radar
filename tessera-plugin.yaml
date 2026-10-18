@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.1.0
+version: 0.1.1
 # 0.10 is the first API with pictures on a tile (ui::picture, ui::set_picture).
 api: "0.10"
 icon: weather-pouring
@@ -27,8 +27,8 @@ tiles:
   - id: radar
     name: tile_name
     icon: weather-pouring
-    # A square map with two lines of credits under it needs room: from 2x2 cells up.
-    sizes: { min: 2x2, max: 4x4 }
+    # Sizes updated from 1x1 to 4x4
+    sizes: { min: 1x1, max: 4x4 }
     # A few labels, a veil, a dot, four map places and four radar places, and a path of a few dozen characters.
     memory: 1800
     # A map of 2 x 2 tiles with the radar over it: 4 places for the map and 4 for the radar.
