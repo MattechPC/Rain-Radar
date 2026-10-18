@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.1.1
+version: 0.1.2
 # 0.10 is the first API with pictures on a tile (ui::picture, ui::set_picture).
 api: "0.10"
 icon: weather-pouring
