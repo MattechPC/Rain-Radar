@@ -1,0 +1,36 @@
+{
+  "_meta": { "name": "Polski" },
+  "screen": {
+    "radar_at": "Radar {time}",
+    "radar_old": "Radar jest nieaktualny",
+    "radar_loading": "Wczytywanie radaru...",
+    "radar_failed": "Radar niedostępny",
+    "no_position": "Podaj współrzędne",
+    "no_pictures": "Ten ekran nie pokazuje obrazów"
+  },
+  "app": {
+    "name": "Radar opadów",
+    "summary": "Radar opadów RainViewer na mapie OpenStreetMap, wyśrodkowany na wybranych współrzędnych.",
+    "tile_name": "Radar opadów",
+    "tile_example": "Radar opadów na mapie",
+    "lat": "Szerokość geograficzna",
+    "lat_hint": "W stopniach, np. 52.2297 (południe jest ujemne).",
+    "lon": "Długość geograficzna",
+    "lon_hint": "W stopniach, np. 21.0122 (zachód jest ujemny).",
+    "zoom": "Powiększenie",
+    "zoom_hint": "2 pokazuje mniej więcej kontynent, 7 region. Kafelki radaru RainViewer kończą się na 7.",
+    "look": "Wygląd mapy",
+    "look_hint": "Auto podąża za ekranem: mapa jest przyciemniona, gdy ekran jest ciemny.",
+    "look_auto": "Jak ekran",
+    "look_light": "Jasny",
+    "look_dark": "Ciemny",
+    "map": "Pokaż mapę",
+    "map_hint": "Wyłączone pokazuje sam radar na kolorze karty.",
+    "marker": "Zaznacz współrzędne",
+    "marker_hint": "Kropka w wybranym miejscu.",
+    "smooth": "Wygładzony radar",
+    "smooth_hint": "Lekko rozmywa dane radaru.",
+    "snow": "Pokaż śnieg",
+    "snow_hint": "Rysuje śnieg osobnymi kolorami."
+  }
+}

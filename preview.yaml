@@ -1,0 +1,30 @@
+# What tools/preview.py shows: the data of the tile on every kind of screen (docs/PREVIEW.md of the plugins repository).
+# Never put a secret here.
+tiles:
+  - tile: radar
+    name: Warsaw
+    options: { lat: "52.2297", lon: "21.0122", zoom: 6 }
+  - tile: radar
+    name: Dark map, radar only
+    options: { lat: "52.2297", lon: "21.0122", zoom: 5, map: false }
+    sizes: [2x2]
+  - tile: radar
+    name: Dark look
+    options: { lat: "-33.8688", lon: "151.2093", zoom: 7, look: dark }
+    sizes: [3x3]
+  - tile: radar
+    name: No coordinates
+    options: { lat: "", lon: "" }
+    sizes: [2x2]
+
+# The answer of RainViewer's weather-maps.json as the service gives it (host, radar.past with a time and a path).
+answers:
+  frames:
+    version: "2.0"
+    generated: "{epoch}"
+    host: https://tilecache.rainviewer.com
+    radar:
+      past:
+        - { time: "{epoch-30m}", path: /v2/radar/7f3c1a0b2d4e }
+        - { time: "{epoch-20m}", path: /v2/radar/8a4d2b1c3e5f }
+        - { time: "{epoch-10m}", path: /v2/radar/9b5e3c2d4f60 }

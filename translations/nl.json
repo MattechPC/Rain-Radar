@@ -1,0 +1,36 @@
+{
+  "_meta": { "name": "Nederlands" },
+  "screen": {
+    "radar_at": "Radar {time}",
+    "radar_old": "Radar is verouderd",
+    "radar_loading": "Radar laden...",
+    "radar_failed": "Radar niet beschikbaar",
+    "no_position": "Vul de coördinaten in",
+    "no_pictures": "Dit scherm toont geen beelden"
+  },
+  "app": {
+    "name": "Regenradar",
+    "summary": "De regenradar van RainViewer op een OpenStreetMap-kaart, gecentreerd op coördinaten naar keuze.",
+    "tile_name": "Regenradar",
+    "tile_example": "Regenradar op de kaart",
+    "lat": "Breedtegraad",
+    "lat_hint": "In graden, zoals 52.2297 (zuid is negatief).",
+    "lon": "Lengtegraad",
+    "lon_hint": "In graden, zoals 21.0122 (west is negatief).",
+    "zoom": "Zoom",
+    "zoom_hint": "2 toont ongeveer een continent, 7 een regio. De radartegels van RainViewer gaan tot 7.",
+    "look": "Uiterlijk van de kaart",
+    "look_hint": "Auto volgt het scherm: de kaart wordt gedimd als het scherm donker is.",
+    "look_auto": "Volg het scherm",
+    "look_light": "Licht",
+    "look_dark": "Donker",
+    "map": "Kaart tonen",
+    "map_hint": "Uit toont alleen de radar, op de kleur van de kaart.",
+    "marker": "Coördinaten markeren",
+    "marker_hint": "Een stip op de plek die je koos.",
+    "smooth": "Gladde radar",
+    "smooth_hint": "Vervaagt de radargegevens een beetje.",
+    "snow": "Sneeuw tonen",
+    "snow_hint": "Tekent sneeuw in eigen kleuren."
+  }
+}

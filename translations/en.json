@@ -1,0 +1,38 @@
+{
+  "_meta": { "name": "English" },
+  "screen": {
+    "credit_both": "© OpenStreetMap contributors · Weather data by RainViewer",
+    "credit_radar": "Weather data by RainViewer",
+    "radar_at": "Radar {time}",
+    "radar_old": "Radar is out of date",
+    "radar_loading": "Loading radar...",
+    "radar_failed": "Radar not available",
+    "no_position": "Enter the coordinates",
+    "no_pictures": "This screen shows no pictures"
+  },
+  "app": {
+    "name": "Rain radar",
+    "summary": "The rain radar of RainViewer over an OpenStreetMap map, centred on coordinates you choose.",
+    "tile_name": "Rain radar",
+    "tile_example": "Rain radar on the map",
+    "lat": "Latitude",
+    "lat_hint": "In degrees, such as 52.2297 (south is negative).",
+    "lon": "Longitude",
+    "lon_hint": "In degrees, such as 21.0122 (west is negative).",
+    "zoom": "Zoom",
+    "zoom_hint": "2 shows about a continent, 7 about a region. RainViewer's radar tiles stop at 7.",
+    "look": "Look of the map",
+    "look_hint": "Auto follows the screen: the map is dimmed when the screen is dark.",
+    "look_auto": "Follow the screen",
+    "look_light": "Light",
+    "look_dark": "Dark",
+    "map": "Show the map",
+    "map_hint": "Off shows the radar alone, on the card's own colour.",
+    "marker": "Mark the coordinates",
+    "marker_hint": "A dot on the place you chose.",
+    "smooth": "Smooth radar",
+    "smooth_hint": "Blurs the radar data a little.",
+    "snow": "Show snow",
+    "snow_hint": "Draws snow in its own colours."
+  }
+}
