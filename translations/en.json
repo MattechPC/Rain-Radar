@@ -10,7 +10,8 @@
     "radar_loading": "Loading radar...",
     "radar_failed": "Radar not available",
     "no_position": "Enter the coordinates",
-    "no_pictures": "This screen shows no pictures"
+    "no_pictures": "This screen shows no pictures",
+    "too_small": "Enlarge the tile or open it for the map"
   },
   "app": {
     "name": "Rain radar",
@@ -24,7 +25,7 @@
     "zoom": "Zoom",
     "zoom_hint": "2 shows about a continent, 7 about a region. RainViewer's radar tiles stop at 7.",
     "look": "Look of the map",
-    "look_hint": "Auto follows the screen: the map is dimmed when the screen is dark.",
+    "look_hint": "Auto follows the screen: the map is dimmed when the screen is dark (OpenStreetMap has no dark map).",
     "look_auto": "Follow the screen",
     "look_light": "Light",
     "look_dark": "Dark",
@@ -36,19 +37,10 @@
     "smooth_hint": "Blurs the radar data a little.",
     "snow": "Show snow",
     "snow_hint": "Draws snow in its own colours.",
-    "zoom_factor": "Zoom Factor",
-    "zoom_factor_hint": "Digital zoom factor around center.",
-    "aspect_ratio": "Aspect Ratio",
-    "aspect_ratio_hint": "Select map grid aspect ratio.",
-    "zoom_factor_label": "Zoom Factor",
-    "zf_1x": "1x (Normal)",
-    "zf_125": "1.25x",
-    "zf_15": "1.5x",
-    "zf_2x": "2x (Zoom)",
-    "aspect_ratio_label": "Aspect Ratio",
-    "asp_auto": "Auto",
-    "asp_11": "1:1",
-    "asp_43": "4:3",
-    "asp_169": "16:9"
+    "card_name": "Rain radar",
+    "center": "Coordinates in the middle",
+    "center_hint": "On keeps the coordinates exactly in the middle of the map; the map is then a window around them, smaller than the tile. Off fills the tile, and the dot shows the place.",
+    "fullscreen": "Open full screen on tap",
+    "fullscreen_hint": "A tap on the map opens it over the whole screen. Off does nothing on a tap."
   }
 }

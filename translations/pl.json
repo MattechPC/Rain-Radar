@@ -8,7 +8,8 @@
     "radar_loading": "Wczytywanie radaru...",
     "radar_failed": "Radar niedostępny",
     "no_position": "Podaj współrzędne",
-    "no_pictures": "Ten ekran nie pokazuje obrazów"
+    "no_pictures": "Ten ekran nie pokazuje obrazów",
+    "too_small": "Powiększ kafelek lub otwórz go, by zobaczyć mapę"
   },
   "app": {
     "name": "Radar opadów",
@@ -22,7 +23,7 @@
     "zoom": "Powiększenie",
     "zoom_hint": "2 pokazuje mniej więcej kontynent, 7 region. Kafelki radaru RainViewer kończą się na 7.",
     "look": "Wygląd mapy",
-    "look_hint": "Auto podąża za ekranem: mapa jest przyciemniona, gdy ekran jest ciemny.",
+    "look_hint": "Auto podąża za ekranem: mapa jest przyciemniona, gdy ekran jest ciemny (OpenStreetMap nie ma ciemnej mapy).",
     "look_auto": "Jak ekran",
     "look_light": "Jasny",
     "look_dark": "Ciemny",
@@ -34,19 +35,10 @@
     "smooth_hint": "Lekko rozmywa dane radaru.",
     "snow": "Pokaż śnieg",
     "snow_hint": "Rysuje śnieg osobnymi kolorami.",
-    "zoom_factor": "Współczynnik przybliżenia (Zoom)",
-    "zoom_factor_hint": "Cyfrowe przybliżenie środka mapy.",
-    "aspect_ratio": "Proporcje ekranu / kafelka",
-    "aspect_ratio_hint": "Wybierz proporcje siatki mapy.",
-    "zoom_factor_label": "Współczynnik przybliżenia",
-    "zf_1x": "1x (Normalny)",
-    "zf_125": "1.25x",
-    "zf_15": "1.5x",
-    "zf_2x": "2x (Przybliżenie)",
-    "aspect_ratio_label": "Proporcje widoku",
-    "asp_auto": "Auto",
-    "asp_11": "1:1",
-    "asp_43": "4:3",
-    "asp_169": "16:9"
+    "card_name": "Radar opadów",
+    "center": "Współrzędne na środku",
+    "center_hint": "Włączone utrzymuje współrzędne dokładnie na środku mapy; mapa jest wtedy oknem wokół nich, mniejszym niż kafelek. Wyłączone wypełnia kafelek, a kropka pokazuje miejsce.",
+    "fullscreen": "Pełny ekran po dotknięciu",
+    "fullscreen_hint": "Dotknięcie mapy otwiera ją na całym ekranie. Wyłączone nie robi nic po dotknięciu."
   }
 }

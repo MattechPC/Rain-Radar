@@ -1,12 +1,15 @@
 {
-  "_meta": { "name": "Nederlands" },
+  "_meta": {
+    "name": "Nederlands"
+  },
   "screen": {
     "radar_at": "Radar {time}",
     "radar_old": "Radar is verouderd",
     "radar_loading": "Radar laden...",
     "radar_failed": "Radar niet beschikbaar",
     "no_position": "Vul de coördinaten in",
-    "no_pictures": "Dit scherm toont geen beelden"
+    "no_pictures": "Dit scherm toont geen beelden",
+    "too_small": "Maak de tegel groter of open hem voor de kaart"
   },
   "app": {
     "name": "Regenradar",
@@ -20,7 +23,7 @@
     "zoom": "Zoom",
     "zoom_hint": "2 toont ongeveer een continent, 7 een regio. De radartegels van RainViewer gaan tot 7.",
     "look": "Uiterlijk van de kaart",
-    "look_hint": "Auto volgt het scherm: de kaart wordt gedimd als het scherm donker is.",
+    "look_hint": "Auto volgt het scherm: de kaart wordt gedimd als het scherm donker is (OpenStreetMap heeft geen donkere kaart).",
     "look_auto": "Volg het scherm",
     "look_light": "Licht",
     "look_dark": "Donker",
@@ -31,6 +34,11 @@
     "smooth": "Gladde radar",
     "smooth_hint": "Vervaagt de radargegevens een beetje.",
     "snow": "Sneeuw tonen",
-    "snow_hint": "Tekent sneeuw in eigen kleuren."
+    "snow_hint": "Tekent sneeuw in eigen kleuren.",
+    "card_name": "Regenradar",
+    "center": "Coördinaten in het midden",
+    "center_hint": "Aan houdt de coördinaten precies in het midden van de kaart; de kaart is dan een venster eromheen, kleiner dan de tegel. Uit vult de tegel en de stip toont de plek.",
+    "fullscreen": "Volledig scherm bij tik",
+    "fullscreen_hint": "Een tik op de kaart opent hem over het hele scherm. Uit doet niets bij een tik."
   }
 }
