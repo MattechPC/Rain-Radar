@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.2.0
+version: 0.2.2
 # 0.13 is the first API with pictures on a card (the tile opens a card with the map over the whole glass).
 api: "0.13"
 icon: weather-pouring
@@ -49,9 +49,9 @@ tiles:
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
       # Keep the coordinates exactly in the middle of the map (the map is then a window around them), or fill the tile.
-      - { id: center, kind: toggle, label: center, hint: center_hint, default: true }
+      - { id: center, kind: toggle, label: center, hint: center_hint, default: false }
       # A tap opens the map over the whole screen, as a camera tile of Tessera does.
-      - { id: fullscreen, kind: toggle, label: fullscreen, hint: fullscreen_hint, default: false }
+      - { id: fullscreen, kind: toggle, label: fullscreen, hint: fullscreen_hint, default: true }
       - { id: map, kind: toggle, label: map, hint: map_hint, default: true }
       - { id: marker, kind: toggle, label: marker, hint: marker_hint, default: true }
       - { id: smooth, kind: toggle, label: smooth, hint: smooth_hint, default: true }

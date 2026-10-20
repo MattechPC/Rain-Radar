@@ -10,7 +10,7 @@ enum class Look { AUTO, LIGHT, DARK };
 struct Config {
   double lat = 0, lon = 0;
   int zoom = 6;
-  bool has_position = false, show_map = true, marker = true, smooth = true, snow = true, center = true, fullscreen = false;
+  bool has_position = false, show_map = true, marker = true, smooth = true, snow = true, center = false, fullscreen = true;
   Look look = Look::AUTO;
 };
 

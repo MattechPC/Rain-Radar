@@ -17,8 +17,8 @@ Weather data by [RainViewer](https://www.rainviewer.com).
 3. In the inspector, fill in the **Latitude** and **Longitude** in degrees, such as `52.2297` and `21.0122` (south and
    west are negative; a comma works as the decimal point).
 4. Choose the **Zoom**, from 2 (about a continent) to 7 (about a region). 7 is the most RainViewer's radar offers.
-5. **Open full screen on tap** (off by default) opens the map over the whole screen when you tap it, as a camera tile
-   does. **Coordinates in the middle** (on by default) is explained below.
+5. **Open full screen on tap** (on by default) opens the map over the whole screen when you tap it, as a camera tile
+   does. **Coordinates in the middle** (off by default) is explained below.
 6. Choose the **Look of the map**: *Follow the screen* dims the map when the screen is in its dark look and leaves it
    light in the light look; *Light* and *Dark* keep it one way whatever the screen does.
 
@@ -33,7 +33,9 @@ Weather data by [RainViewer](https://www.rainviewer.com).
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light
-  look, so in the dark look it is dimmed with a dark veil, the radar with it (providers with a dark map ask for an account key); **Show the map** off shows
+  look, so in the dark look it is dimmed with a dark veil, the radar with it. A black map like Home Assistant's (CARTO
+  Dark Matter) needs an account key since September 2026, and a key cannot be passed to the screen's pictures, so it is
+  not offered; **Show the map** off shows
   the radar alone on the card's colour.
 - A screen without the memory for pictures (the CYD, the Waveshare 3.5-inch, the Hosyond 4-inch) shows the coordinates
   and the credits in words instead of the map.

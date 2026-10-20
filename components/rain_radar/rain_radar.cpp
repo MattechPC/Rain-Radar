@@ -305,8 +305,8 @@ static Config read_config(JsonObjectConst options) {
   const std::string look = options["look"] | "auto";
   c.look = look == "dark" ? Look::DARK : look == "light" ? Look::LIGHT : Look::AUTO;
   c.zoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, static_cast<int>(options["zoom"] | 6)));
-  c.center = options["center"] | true;
-  c.fullscreen = options["fullscreen"] | false;
+  c.center = options["center"] | false;
+  c.fullscreen = options["fullscreen"] | true;
   c.has_position = parse_degrees(options["lat"] | "", 85.0, &c.lat) && parse_degrees(options["lon"] | "", 180.0, &c.lon);
   return c;
 }

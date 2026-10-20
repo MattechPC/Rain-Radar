@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2
+- The map now fills the tile by default: **Coordinates in the middle** is off by default (it made the map a small window
+  inside the tile). Turn it on for the exact centre at the cost of a smaller map.
+- A dark look closer to Home Assistant's is not possible without an account key (see the README).
+
+## 0.2.1
+- **Open full screen on tap** is on by default; **Show the map** was already on.
+
 ## 0.2.0
 - The map is built from square tiles that always join, with square corners: no more jumps between tiles and no dark
   gaps where they meet.
