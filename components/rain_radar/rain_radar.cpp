@@ -68,14 +68,15 @@ static bool path_ok(const std::string &path) {
 //  * Off: the block fills the room and the coordinates lie where they fall; the dot shows the place.
 class Panel {
  public:
-  void build(lv_obj_t *parent, int width, int height, const Config &config, const tessera::Plugin *plugin, int radar_size,
-             bool immersive = false) {
+  void build(lv_obj_t *parent, int width, int height, const Config &config, const tessera::Plugin *plugin, int radar_size) {
     plugin_ = plugin;
     cfg_ = config;
+    // Always fill the actual Tessera tile/card. Preserve the map aspect ratio by digitally zooming
+    // (cover), rather than shrinking a square 2x2 tile block and leaving empty card space.
+    cfg_.center = false;
     width_ = width;
     height_ = height;
     radar_size_ = radar_size;
-    immersive_ = immersive;
 
     // The credits, wrapped over as many lines as the width needs. RainViewer: "Weather data by RainViewer";
     // OpenStreetMap: "(c) OpenStreetMap contributors", which the screen cannot link, so the README does.
@@ -83,11 +84,10 @@ class Panel {
     const int lines = std::min(3, std::max(1, static_cast<int>(std::ceil(ui::text_width(credit, Font::BODY) * 1.15 / std::max(1, width_)))));
     const int body = ui::line_height(Font::BODY);
     const int credit_h = lines * body;
-    const int gap = immersive_ ? 0 : ui::px(4);
+    const int gap = ui::px(4);
 
-    // In the fullscreen card, give the map the entire detected card area. The regular tile reserves room for status
-    // and attribution; the camera-like view deliberately does not, and fits/crops the map to the actual screen bounds.
-    const int room_h = immersive_ ? height_ : std::max(1, height_ - credit_h - body - 2 * gap);
+    // The room for the map: above the status line and the credits.
+    const int room_h = std::max(1, height_ - credit_h - body - 2 * gap);
     const bool pictures = ui::pictures();
     map_ = pictures && cfg_.has_position && std::min(width_, room_h) >= ui::mm(12);
     if (map_) {
@@ -139,15 +139,12 @@ class Panel {
       top = room_h + gap;
     }
 
-    if (!immersive_) {
-      status_ = ui::label(parent, Font::BODY, theme::INK);
-      lv_obj_set_width(status_, width_);
-      lv_obj_set_pos(status_, 0, top);
-    }
-    // Keep provider attribution visible in fullscreen too, overlaid at the bottom rather than reserving map area.
+    status_ = ui::label(parent, Font::BODY, theme::INK);
+    lv_obj_set_width(status_, width_);
+    lv_obj_set_pos(status_, 0, top);
     credit_ = ui::text(parent, Font::BODY, theme::MUTED);
     lv_obj_set_size(credit_, width_, credit_h);
-    lv_obj_set_pos(credit_, 0, immersive_ ? std::max(0, height_ - credit_h) : top + body + gap / 2);
+    lv_obj_set_pos(credit_, 0, top + body + gap / 2);
     ui::set_text(credit_, credit);
     note_text_ = !pictures ? plugin_->text("no_pictures") : cfg_.has_position ? plugin_->text("too_small") : "";
     paint_look();
@@ -177,7 +174,7 @@ class Panel {
     } else {
       line = plugin_->text("radar_loading");
     }
-    if (status_) ui::set_text(status_, line);
+    ui::set_text(status_, line);
     if (note_) {
       std::string note;
       if (cfg_.has_position) {
@@ -191,8 +188,8 @@ class Panel {
 
   // Light and dark: the theme roles have other values now, and the map's veil follows the look.
   void restyle() {
-    if (status_) ui::set_color(status_, theme::INK);
-    if (credit_) ui::set_color(credit_, theme::MUTED);
+    ui::set_color(status_, theme::INK);
+    ui::set_color(credit_, theme::MUTED);
     if (note_) ui::set_color(note_, theme::MUTED);
     paint_look();
   }
@@ -226,48 +223,23 @@ class Panel {
     py_ = std::max(0.0, std::min(static_cast<double>(GRID), y - y0));
   }
 
-  // The size of a tile and where the block lies in the card's room (width_ x room_h): false when nothing fits.
+  // Size the square 2x2 source block to COVER the available area. This is a digital zoom: the
+  // source map keeps its proportions, while the excess beyond the card edges is clipped by LVGL.
+  // Width and height come from Tessera at runtime, so this works for tiles and fullscreen cards.
   bool layout(int room_h) {
-    const double eps = 0.001;
     cx_ = width_ / 2;
     cy_ = room_h / 2;
-    if (immersive_) {
-      // Like a camera image with "cover": use the screen's real width and height, scale until the entire screen is
-      // covered, then let the parent clip the excess. This is intentionally based on c.width/c.height, not a fixed
-      // resolution, so portrait and landscape screens both work.
-      tile_ = static_cast<int>(std::ceil(std::max(width_, room_h) / static_cast<double>(GRID)));
-      if (tile_ < 1) return false;
-      x0_px_ = (width_ - GRID * tile_) / 2;
-      y0_px_ = (room_h - GRID * tile_) / 2;
-      dot_x_ = x0_px_ + static_cast<int>(std::lround(px_ * tile_));
-      dot_y_ = y0_px_ + static_cast<int>(std::lround(py_ * tile_));
-      cx_ = width_ / 2;
-      cy_ = room_h / 2;
-      hx_ = width_ / 2;
-      hy_ = room_h / 2;
-      return true;
-    }
-    if (cfg_.center) {
-      const double fit = std::min(std::min(cx_ / std::max(px_, eps), (width_ - cx_) / std::max(GRID - px_, eps)),
-                                  std::min(cy_ / std::max(py_, eps), (room_h - cy_) / std::max(GRID - py_, eps)));
-      tile_ = static_cast<int>(std::floor(fit));
-      hx_ = static_cast<int>(std::floor(std::min(px_, GRID - px_) * tile_));
-      hy_ = static_cast<int>(std::floor(std::min(py_, GRID - py_) * tile_));
-      if (tile_ >= 1 && std::min(hx_, hy_) * 2 >= ui::mm(12)) {
-        x0_px_ = cx_ - static_cast<int>(std::lround(px_ * tile_));
-        y0_px_ = cy_ - static_cast<int>(std::lround(py_ * tile_));
-        dot_x_ = cx_;
-        dot_y_ = cy_;
-        return true;
-      }
-      cfg_.center = false;   // a window that small is no map: the block fills the room instead
-    }
-    tile_ = std::min(width_, room_h) / GRID;
+    // Each source tile is square and the source block is 2x2. Use the larger dimension so
+    // the block always covers the whole target, regardless of its aspect ratio. Rounding up
+    // avoids a one-pixel seam at the far edge. The excess is intentionally cropped, not stretched.
+    tile_ = static_cast<int>(std::ceil(std::max(width_, room_h) / static_cast<double>(GRID)));
     if (tile_ < 1) return false;
     x0_px_ = (width_ - GRID * tile_) / 2;
     y0_px_ = (room_h - GRID * tile_) / 2;
     dot_x_ = x0_px_ + static_cast<int>(std::lround(px_ * tile_));
     dot_y_ = y0_px_ + static_cast<int>(std::lround(py_ * tile_));
+    hx_ = width_ / 2;
+    hy_ = room_h / 2;
     return true;
   }
 
@@ -309,7 +281,7 @@ class Panel {
   Config cfg_;
   int width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
   int x0_px_ = 0, y0_px_ = 0, cx_ = 0, cy_ = 0, hx_ = 0, hy_ = 0, dot_x_ = 0, dot_y_ = 0;
-  bool map_ = false, immersive_ = false;
+  bool map_ = false;
   double px_ = 1, py_ = 1;
   uint32_t frame_at_ = 0;
   tessera::Text path_, wait_, note_text_;   // kept as long as the card: PSRAM first (docs/FIRMWARE_API.md, "Memory")
@@ -374,7 +346,7 @@ class RadarCard : public tessera::Card {
   explicit RadarCard(RainRadar *plugin) : plugin_(plugin) {}
 
   void open(const tessera::CardContext &c) override {
-    panel_.build(c.parent, c.width, c.height, plugin_->config, plugin_, 512, true);
+    panel_.build(c.parent, c.width, c.height, plugin_->config, plugin_, 512);
     panel_.frame(roomy::plain(plugin_->frame_path), plugin_->frame_at, "");
   }
   void on_state(JsonObjectConst data) override {

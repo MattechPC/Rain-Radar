@@ -24,16 +24,12 @@ Weather data by [RainViewer](https://www.rainviewer.com).
 
 ## Good to know
 
-- The map is made of 2 × 2 OpenStreetMap tiles with the radar tiles exactly aligned over them. In the normal tile, **Coordinates in the
-  middle** moves the map so the coordinates are centred and masks the uneven edges; with it off, the map fills the tile and
+- The map is made of 2 × 2 OpenStreetMap tiles with the radar's tiles exactly over them. Tessera can show a picture only
+  whole, and only inside the tile, so a map can be moved by whole pixels but never cut. With **Coordinates in the
+  middle** on, the map is moved until your coordinates are the middle of the tile and the part that does not lie evenly
+  around them is hidden: the coordinates are then the exact centre of the map, and the map is a window between a third
+  and the whole of the tile, depending on where the coordinates fall in their map tile. Off, the map fills the tile and
   the dot shows where the coordinates are.
-- The fullscreen card now uses the card's actual width and height and a camera-like **cover** fit: it scales the tile block
-  until the available screen area is covered, clipping the excess at the screen edges. This adapts to different screen sizes
-  and orientations and reserves no space for the status line. Provider attribution remains overlaid at the bottom.
-- The map and radar are still requested as separate provider tiles and layered by Tessera. The current plugin API accepts
-  remote picture URLs rather than a locally composed raster, so producing one physical PNG/JPEG inside this plugin would
-  require a new image-composition endpoint or a change to Tessera's image API; this package does not pretend to implement
-  that unsupported part.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light
@@ -56,3 +52,8 @@ Tessera (the app in Home Assistant, not the screen) asks `api.rainviewer.com` fo
 the radar tiles from `tilecache.rainviewer.com` and the map tiles from `tile.openstreetmap.org`. The map and radar
 servers see the address of your Home Assistant and the map tiles you look at, which show roughly where the coordinates
 you chose are; nothing else of your home. No key and no account are involved. The screen never reaches the internet.
+
+
+### Responsive map filling (0.2.4)
+
+The map and radar now use a cover-style layout based on the actual width and height Tessera provides for the tile or fullscreen card. The square map tiles keep their proportions; when the target is not square, the image is digitally zoomed and the excess is cropped at the edges. This avoids stretching and prevents the map from appearing as a small square inside a larger tile.
