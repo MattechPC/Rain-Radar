@@ -39,7 +39,7 @@
     "snow_hint": "Draws snow in its own colours.",
     "card_name": "Rain radar",
     "center": "Coordinates in the middle",
-    "center_hint": "Off (default) fills the tile as far as the map allows, and the dot shows the place. On keeps the coordinates exactly in the middle; the map is then a window around them, smaller than the tile.",
+    "center_hint": "On (default) keeps the coordinates exactly in the middle of the tile; the map is then a window around them. Off lets the map cover as much of the tile as it can, and the dot shows the place.",
     "fullscreen": "Open full screen on tap",
     "fullscreen_hint": "A tap on the map opens it over the whole screen. Off does nothing on a tap."
   }

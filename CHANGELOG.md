@@ -1,9 +1,16 @@
 # Changelog
 
-## 0.2.4
-- Make the map/radar block fill the actual Tessera tile or fullscreen card using aspect-ratio-preserving cover scaling (digital zoom).
-- Derive scale from runtime width and height; crop excess at the edges instead of stretching the map or leaving blank space.
+## 0.4.0
+- A backdrop where the map does not cover the tile or the full-screen card: weather icons at various angles and range
+  rings round the coordinates, in the quiet colours of the theme, instead of a plain empty frame.
+- The CARTO key option of the previous draft is gone: the dark look dims the OpenStreetMap map, as before.
 
+## 0.2.3
+- **Coordinates in the middle** is on by default again.
+- No more grey empty frame: what the map tiles do not cover is filled with the page's colour (dimmed
+  in the dark look), so the map looks like it fills the whole tile or full-screen card.
+- With the coordinates not in the middle, the map takes the shape of up to four tiles (2 x 2, 3 x 1, 4 x 1 or upright)
+  that covers most of a wide or tall tile.
 
 ## 0.2.2
 - The map now fills the tile by default: **Coordinates in the middle** is off by default (it made the map a small window

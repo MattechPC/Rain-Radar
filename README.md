@@ -18,24 +18,23 @@ Weather data by [RainViewer](https://www.rainviewer.com).
    west are negative; a comma works as the decimal point).
 4. Choose the **Zoom**, from 2 (about a continent) to 7 (about a region). 7 is the most RainViewer's radar offers.
 5. **Open full screen on tap** (on by default) opens the map over the whole screen when you tap it, as a camera tile
-   does. **Coordinates in the middle** (off by default) is explained below.
+   does. **Coordinates in the middle** (on by default) is explained below.
 6. Choose the **Look of the map**: *Follow the screen* dims the map when the screen is in its dark look and leaves it
    light in the light look; *Light* and *Dark* keep it one way whatever the screen does.
 
 ## Good to know
 
-- The map is made of 2 × 2 OpenStreetMap tiles with the radar's tiles exactly over them. Tessera can show a picture only
-  whole, and only inside the tile, so a map can be moved by whole pixels but never cut. With **Coordinates in the
-  middle** on, the map is moved until your coordinates are the middle of the tile and the part that does not lie evenly
-  around them is hidden: the coordinates are then the exact centre of the map, and the map is a window between a third
-  and the whole of the tile, depending on where the coordinates fall in their map tile. Off, the map fills the tile and
-  the dot shows where the coordinates are.
+- The map is made of up to four OpenStreetMap tiles with the radar's tiles exactly over them. Tessera can show a picture
+  only whole, and only inside the tile (at most 8 pictures per tile), so a map cannot be cut to the exact shape of a
+  tile. What the map tiles do not cover shows a quiet backdrop of weather icons and range rings in the theme's colours, so the
+  tile and the full-screen card do not look empty. With **Coordinates in the middle** on, the map is 2 × 2 tiles, moved until your coordinates are the
+  middle of the tile, and the part that does not lie evenly around them is hidden: the coordinates are the exact centre,
+  and the map around them is a window of between a half and the whole of the tile. Off, the map takes the shape of up to
+  four tiles (2 × 2, 3 × 1, 4 × 1 or upright) that covers most of the tile, and the dot shows where the coordinates are.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light
-  look, so in the dark look it is dimmed with a dark veil, the radar with it. A black map like Home Assistant's (CARTO
-  Dark Matter) needs an account key since September 2026, and a key cannot be passed to the screen's pictures, so it is
-  not offered; **Show the map** off shows
+  look, so in the dark look it is dimmed with a dark veil, the radar with it. A black map like Home Assistant's would need a provider's account key, so it is not offered. **Show the map** off shows**Show the map** off shows**Show the map** off shows
   the radar alone on the card's colour.
 - A screen without the memory for pictures (the CYD, the Waveshare 3.5-inch, the Hosyond 4-inch) shows the coordinates
   and the credits in words instead of the map.
@@ -52,8 +51,3 @@ Tessera (the app in Home Assistant, not the screen) asks `api.rainviewer.com` fo
 the radar tiles from `tilecache.rainviewer.com` and the map tiles from `tile.openstreetmap.org`. The map and radar
 servers see the address of your Home Assistant and the map tiles you look at, which show roughly where the coordinates
 you chose are; nothing else of your home. No key and no account are involved. The screen never reaches the internet.
-
-
-### Responsive map filling (0.2.4)
-
-The map and radar now use a cover-style layout based on the actual width and height Tessera provides for the tile or fullscreen card. The square map tiles keep their proportions; when the target is not square, the image is digitally zoomed and the excess is cropped at the edges. This avoids stretching and prevents the map from appearing as a small square inside a larger tile.

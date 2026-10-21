@@ -23,7 +23,7 @@ static const char *const OSM_HOST = "https://tile.openstreetmap.org";
 static const char *const RADAR_HOST = "https://tilecache.rainviewer.com";
 static const int MIN_ZOOM = 2;
 static const int MAX_ZOOM = 7;        // RainViewer's limit for radar tiles
-static const int GRID = 2;            // the map is GRID x GRID tiles; 2 x 2 per layer fits the 8 places of the tile
+static const int MAX_CELLS = 4;       // a layer has at most 4 places (2 layers fit the 8 places of a tile)
 static const int MAX_AGE = 3600;      // a frame older than an hour is called old: RainViewer lists two hours at most
 
 // A text of a coordinate as a number; a comma counts as the decimal point. False when it is not a number.
@@ -71,9 +71,6 @@ class Panel {
   void build(lv_obj_t *parent, int width, int height, const Config &config, const tessera::Plugin *plugin, int radar_size) {
     plugin_ = plugin;
     cfg_ = config;
-    // Always fill the actual Tessera tile/card. Preserve the map aspect ratio by digitally zooming
-    // (cover), rather than shrinking a square 2x2 tile block and leaving empty card space.
-    cfg_.center = false;
     width_ = width;
     height_ = height;
     radar_size_ = radar_size;
@@ -91,37 +88,43 @@ class Panel {
     const bool pictures = ui::pictures();
     map_ = pictures && cfg_.has_position && std::min(width_, room_h) >= ui::mm(12);
     if (map_) {
+      pick_grid(room_h);
       locate();
       if (!layout(room_h)) map_ = false;
     }
 
     int top = 0;
     if (map_) {
-      // The layers, from the back to the front: the map, then the radar over it; each is 2 x 2 places.
+      // The ground under the map, in the page's own colour, over the whole room: what the tiles do not cover
+      // looks like more map and not like an empty frame.
+      ground_ = cover(parent, theme::PAGE, 0, 0, width_, room_h);
+      // The layers, from the back to the front: the map, then the radar over it; each is cols x rows places.
       for (int layer = 0; layer < 2; ++layer) {
         if (layer == 0 && !cfg_.show_map) continue;
-        for (int j = 0; j < GRID; ++j) {
-          for (int i = 0; i < GRID; ++i) {
+        for (int j = 0; j < rows_; ++j) {
+          for (int i = 0; i < cols_; ++i) {
             lv_obj_t *place = ui::picture(parent);
             lv_obj_set_size(place, tile_, tile_);
             lv_obj_set_pos(place, x0_px_ + i * tile_, y0_px_ + j * tile_);
             lv_obj_set_style_radius(place, 0, 0);   // square corners: no card colour showing between the tiles
-            (layer == 0 ? map_places_ : radar_places_)[j * GRID + i] = place;
+            (layer == 0 ? map_places_ : radar_places_)[j * cols_ + i] = place;
           }
         }
       }
-      // The map is light, whatever the screen's look: a dark veil over it (above the pictures) for the dark look. The
-      // radar is part of the same picture, so it is dimmed with it.
-      veil_ = cover(parent, theme::CAMERA_PAGE, x0_px_, y0_px_, GRID * tile_, GRID * tile_);
-      // The window: what lies outside it is hidden under the card's own colour.
+      // The window: what lies outside it is hidden under the ground's colour, so the coordinates are its exact centre.
       if (cfg_.center) {
-        const int mx1 = x0_px_ + GRID * tile_, my1 = y0_px_ + GRID * tile_;
+        const int mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
         const int wl = cx_ - hx_, wr = cx_ + hx_, wt = cy_ - hy_, wb = cy_ + hy_;
-        cover(parent, theme::CARD, x0_px_, y0_px_, wl - x0_px_, my1 - y0_px_);
-        cover(parent, theme::CARD, wr, y0_px_, mx1 - wr, my1 - y0_px_);
-        cover(parent, theme::CARD, wl, y0_px_, wr - wl, wt - y0_px_);
-        cover(parent, theme::CARD, wl, wb, wr - wl, my1 - wb);
+        cover(parent, theme::PAGE, x0_px_, y0_px_, wl - x0_px_, my1 - y0_px_);
+        cover(parent, theme::PAGE, wr, y0_px_, mx1 - wr, my1 - y0_px_);
+        cover(parent, theme::PAGE, wl, y0_px_, wr - wl, wt - y0_px_);
+        cover(parent, theme::PAGE, wl, wb, wr - wl, my1 - wb);
       }
+      // The map is light, whatever the screen's look: a dark veil over the whole room for the dark look. The radar is part
+      // of the same picture, so it is dimmed with it.
+      veil_ = cover(parent, theme::CAMERA_PAGE, 0, 0, width_, room_h);
+      // The backdrop of what the map does not cover: weather icons at various angles and rings round the coordinates.
+      decorate(parent, room_h);
       if (cfg_.marker) {
         const int ring = ui::mm(3), dot = ui::mm(2);
         ring_ = cover(parent, theme::CARD, dot_x_ - ring / 2, dot_y_ - ring / 2, ring, ring);
@@ -207,39 +210,128 @@ class Panel {
     return b;
   }
 
+  // Rings round the coordinates, like the range rings of a radar screen, and weather icons scattered at various angles over
+  // what the map does not cover (the free part of the room), all in the quiet colours of the theme. Drawn in one
+  // container that clips them to the room, so none runs over the words under the map.
+  void decorate(lv_obj_t *parent, int room_h) {
+    lv_obj_t *deco = cover(parent, theme::PAGE, 0, 0, width_, room_h);
+    if (!deco) return;
+    lv_obj_set_style_bg_opa(deco, LV_OPA_TRANSP, 0);
+    // The area the map covers: the window (coordinates in the middle) or the block.
+    int mx0 = x0_px_, my0 = y0_px_, mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
+    if (cfg_.center) {
+      mx0 = cx_ - hx_;
+      mx1 = cx_ + hx_;
+      my0 = cy_ - hy_;
+      my1 = cy_ + hy_;
+    }
+    // Rings: three, a tile apart, centred on the dot; only their parts in the free area show (the map hides the rest).
+    for (int k = 1; k <= 3; ++k) {
+      const int r = k * tile_;
+      lv_obj_t *ring = ui::block(deco, theme::LINE);
+      lv_obj_set_size(ring, 2 * r, 2 * r);
+      lv_obj_set_pos(ring, dot_x_ - r, dot_y_ - r);
+      lv_obj_remove_flag(ring, LV_OBJ_FLAG_CLICKABLE);
+      lv_obj_remove_flag(ring, LV_OBJ_FLAG_SCROLLABLE);
+      lv_obj_set_style_radius(ring, LV_RADIUS_CIRCLE, 0);
+      lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, 0);
+      lv_obj_set_style_border_width(ring, 1, 0);
+      lv_obj_set_style_border_color(ring, theme::color(theme::LINE), 0);
+      lv_obj_set_style_border_opa(ring, LV_OPA_60, 0);
+    }
+    // Icons: Tessera's weather icons, each at its own angle, where they fit whole in the free area. A fixed scatter (the
+    // same on every screen and every look) so the backdrop does not jump; none over the map.
+    static const uint32_t ICONS[] = {0xF0596, 0xF0597, 0xF0590, 0xF0595, 0xF0599, 0xF0598, 0xF059D, 0xF067E, 0xF0593, 0xF0591};
+    static const int ANGLES[] = {-25, 18, -8, 30, 12, -32, 22, -15, 35, -5};   // degrees
+    const int box = ui::line_height(Font::ICON);
+    if (box * 3 > std::min(width_, room_h)) return;   // a room this small has no space for a backdrop
+    const int cols = std::max(1, width_ / (box * 2)), rows = std::max(1, room_h / (box * 2));
+    int n = 0;
+    for (int r = 0; r < rows && n < 18; ++r) {
+      for (int c = 0; c < cols && n < 18; ++c, ++n) {
+        const int k = n % 10;
+        // A cell's icon sits at a fixed offset inside it, different from cell to cell.
+        const int cell_w = width_ / cols, cell_h = room_h / rows;
+        const int x = c * cell_w + (cell_w - box) / 2 + ((n * 7) % 5 - 2) * box / 8;
+        const int y = r * cell_h + (cell_h - box) / 2 + ((n * 11) % 5 - 2) * box / 8;
+        const int pad = box / 2;   // room for the turn: the corners swing out of the box
+        if (x < 0 || y < 0 || x + box > width_ || y + box > room_h) continue;
+        const bool over_map = x + box + pad > mx0 && x - pad < mx1 && y + box + pad > my0 && y - pad < my1;
+        if (over_map) continue;
+        lv_obj_t *icon = ui::label(deco, Font::ICON, theme::TRACK);
+        lv_obj_set_size(icon, box, box);
+        lv_obj_set_pos(icon, x, y);
+        lv_obj_remove_flag(icon, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_text_align(icon, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_set_style_transform_pivot_x(icon, box / 2, 0);
+        lv_obj_set_style_transform_pivot_y(icon, box / 2, 0);
+        lv_obj_set_style_transform_rotation(icon, ANGLES[(n * 3) % 10] * 10, 0);
+        ui::set_text(icon, ::tessera::ui::icon(ICONS[k]));
+      }
+    }
+  }
+
   // The tile of the map under the chosen coordinates (Web Mercator, as OpenStreetMap and RainViewer cut it): the block of
-  // GRID x GRID tiles whose middle is nearest to them, and where they lie in it, in tiles from its corner.
+  // cols_ x rows_ tiles whose middle is nearest to them, and where they lie in it, in tiles from its corner.
   void locate() {
     const double pi = 3.14159265358979323846;
     const int count = 1 << cfg_.zoom;
     const double lat = std::max(-85.0511, std::min(85.0511, cfg_.lat)) * pi / 180.0;
     const double x = (cfg_.lon + 180.0) / 360.0 * count;
     const double y = (1.0 - std::asinh(std::tan(lat)) / pi) / 2.0 * count;
-    const double first = std::floor(x - GRID / 2.0 + 0.5);   // the block's first column, before the wrap round the world
-    const int y0 = std::max(0, std::min(count - GRID, static_cast<int>(std::floor(y - GRID / 2.0 + 0.5))));
+    const double first = std::floor(x - cols_ / 2.0 + 0.5);   // the block's first column, before the wrap round the world
+    const int y0 = std::max(0, std::min(count - rows_, static_cast<int>(std::floor(y - rows_ / 2.0 + 0.5))));
     x0_ = ((static_cast<int>(first) % count) + count) % count;
     y0_ = y0;
-    px_ = std::max(0.0, std::min(static_cast<double>(GRID), x - first));
-    py_ = std::max(0.0, std::min(static_cast<double>(GRID), y - y0));
+    px_ = std::max(0.0, std::min(static_cast<double>(cols_), x - first));
+    py_ = std::max(0.0, std::min(static_cast<double>(rows_), y - y0));
   }
 
-  // Size the square 2x2 source block to COVER the available area. This is a digital zoom: the
-  // source map keeps its proportions, while the excess beyond the card edges is clipped by LVGL.
-  // Width and height come from Tessera at runtime, so this works for tiles and fullscreen cards.
+  // The shape of the block: the one of at most 4 tiles that covers most of the room. With the coordinates kept in the
+  // middle it is 2 x 2 (a single row could not keep them central); otherwise 3 x 1, 4 x 1 and their upright forms
+  // serve a room that is much wider or taller than it is high or wide.
+  void pick_grid(int room_h) {
+    static const int shapes[][2] = {{2, 2}, {3, 1}, {1, 3}, {4, 1}, {1, 4}, {2, 1}, {1, 2}};
+    cols_ = rows_ = 2;
+    if (cfg_.center) return;
+    double best = 0;
+    for (const auto &sh : shapes) {
+      const int t = std::min(width_ / sh[0], room_h / sh[1]);
+      const double covered = static_cast<double>(t) * t * sh[0] * sh[1];
+      if (covered > best * 1.05) {   // 2 x 2 first: another shape must be clearly better
+        best = covered;
+        cols_ = sh[0];
+        rows_ = sh[1];
+      }
+    }
+  }
+
+  // The size of a tile and where the block lies in the card's room (width_ x room_h): false when nothing fits.
   bool layout(int room_h) {
+    const double eps = 0.001;
     cx_ = width_ / 2;
     cy_ = room_h / 2;
-    // Each source tile is square and the source block is 2x2. Use the larger dimension so
-    // the block always covers the whole target, regardless of its aspect ratio. Rounding up
-    // avoids a one-pixel seam at the far edge. The excess is intentionally cropped, not stretched.
-    tile_ = static_cast<int>(std::ceil(std::max(width_, room_h) / static_cast<double>(GRID)));
+    if (cfg_.center) {
+      const double fit = std::min(std::min(cx_ / std::max(px_, eps), (width_ - cx_) / std::max(cols_ - px_, eps)),
+                                  std::min(cy_ / std::max(py_, eps), (room_h - cy_) / std::max(rows_ - py_, eps)));
+      tile_ = static_cast<int>(std::floor(fit));
+      hx_ = static_cast<int>(std::floor(std::min(px_, cols_ - px_) * tile_));
+      hy_ = static_cast<int>(std::floor(std::min(py_, rows_ - py_) * tile_));
+      if (tile_ >= 1 && std::min(hx_, hy_) * 2 >= ui::mm(12)) {
+        x0_px_ = cx_ - static_cast<int>(std::lround(px_ * tile_));
+        y0_px_ = cy_ - static_cast<int>(std::lround(py_ * tile_));
+        dot_x_ = cx_;
+        dot_y_ = cy_;
+        return true;
+      }
+      cfg_.center = false;   // a window that small is no map: the block fills the room instead
+    }
+    tile_ = std::min(width_ / cols_, room_h / rows_);
     if (tile_ < 1) return false;
-    x0_px_ = (width_ - GRID * tile_) / 2;
-    y0_px_ = (room_h - GRID * tile_) / 2;
+    x0_px_ = (width_ - cols_ * tile_) / 2;
+    y0_px_ = (room_h - rows_ * tile_) / 2;
     dot_x_ = x0_px_ + static_cast<int>(std::lround(px_ * tile_));
     dot_y_ = y0_px_ + static_cast<int>(std::lround(py_ * tile_));
-    hx_ = width_ / 2;
-    hy_ = room_h / 2;
     return true;
   }
 
@@ -251,9 +343,9 @@ class Panel {
   // The map's addresses depend on the options only, so they are set once.
   void paint_maps() {
     if (!map_ || !cfg_.show_map) return;
-    for (int j = 0; j < GRID; ++j)
-      for (int i = 0; i < GRID; ++i)
-        ui::set_picture(map_places_[j * GRID + i], std::string(OSM_HOST) + "/" + tile_path(i, j) + ".png", tessera::Fit::COVER);
+    for (int j = 0; j < rows_; ++j)
+      for (int i = 0; i < cols_; ++i)
+        ui::set_picture(map_places_[j * cols_ + i], std::string(OSM_HOST) + "/" + tile_path(i, j) + ".png", tessera::Fit::COVER);
   }
 
   // The radar's addresses: the newest frame's path as RainViewer gave it, the size, the zoom, the tile, the colour scheme
@@ -262,9 +354,9 @@ class Panel {
     if (!map_ || path_.empty()) return;
     const std::string path = roomy::plain(path_);
     const std::string options = std::string(cfg_.smooth ? "1" : "0") + "_" + (cfg_.snow ? "1" : "0");
-    for (int j = 0; j < GRID; ++j)
-      for (int i = 0; i < GRID; ++i)
-        ui::set_picture(radar_places_[j * GRID + i],
+    for (int j = 0; j < rows_; ++j)
+      for (int i = 0; i < cols_; ++i)
+        ui::set_picture(radar_places_[j * cols_ + i],
                         std::string(RADAR_HOST) + path + "/" + std::to_string(radar_size_) + "/" + tile_path(i, j) + "/2/" + options + ".png",
                         tessera::Fit::COVER);
   }
@@ -279,14 +371,14 @@ class Panel {
 
   const tessera::Plugin *plugin_ = nullptr;
   Config cfg_;
-  int width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
+  int cols_ = 2, rows_ = 2, width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
   int x0_px_ = 0, y0_px_ = 0, cx_ = 0, cy_ = 0, hx_ = 0, hy_ = 0, dot_x_ = 0, dot_y_ = 0;
   bool map_ = false;
   double px_ = 1, py_ = 1;
   uint32_t frame_at_ = 0;
   tessera::Text path_, wait_, note_text_;   // kept as long as the card: PSRAM first (docs/FIRMWARE_API.md, "Memory")
-  lv_obj_t *map_places_[GRID * GRID]{}, *radar_places_[GRID * GRID]{};
-  lv_obj_t *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
+  lv_obj_t *map_places_[MAX_CELLS]{}, *radar_places_[MAX_CELLS]{};
+  lv_obj_t *ground_{}, *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
 };
 
 // The options of a tile, with the defaults and limits applied.
@@ -299,7 +391,7 @@ static Config read_config(JsonObjectConst options) {
   const std::string look = options["look"] | "auto";
   c.look = look == "dark" ? Look::DARK : look == "light" ? Look::LIGHT : Look::AUTO;
   c.zoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, static_cast<int>(options["zoom"] | 6)));
-  c.center = options["center"] | false;
+  c.center = options["center"] | true;
   c.fullscreen = options["fullscreen"] | true;
   c.has_position = parse_degrees(options["lat"] | "", 85.0, &c.lat) && parse_degrees(options["lon"] | "", 180.0, &c.lon);
   return c;
