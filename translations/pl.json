@@ -37,7 +37,7 @@
     "snow_hint": "Rysuje śnieg osobnymi kolorami.",
     "card_name": "Radar opadów",
     "center": "Współrzędne na środku",
-    "center_hint": "Włączone utrzymuje współrzędne dokładnie na środku mapy; mapa jest wtedy oknem wokół nich, mniejszym niż kafelek. Wyłączone wypełnia kafelek, a kropka pokazuje miejsce.",
+    "center_hint": "Włączone (domyślnie) wyśrodkowuje mapę na współrzędnych, gdy mapa pozostaje dostatecznie duża, a w przeciwnym razie wypełnia kafelek na ile się da, a kropka pokazuje miejsce. Wyłączone zawsze wypełnia kafelek.",
     "fullscreen": "Pełny ekran po dotknięciu",
     "fullscreen_hint": "Dotknięcie mapy otwiera ją na całym ekranie. Wyłączone nie robi nic po dotknięciu."
   }

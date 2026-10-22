@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1
+- Fixes a crash of the screen with a tile as tall as the screen (4 across, 5 down): the range rings of 0.4.0 reached past
+  the edge of the tile and are gone.
+- **Coordinates in the middle** now looks at how large the map would be: when the window around the coordinates would
+  show less than 60% of what the filling block shows, the map fills the tile instead (the dot shows the place).
+- The backdrop lies under the map (no lines across the radar), the dark veil covers the map alone (no black frame around
+  it), and the weather icons are thrown at irregular places in two sizes and fill the free part of the tile.
+
 ## 0.4.0
 - A backdrop where the map does not cover the tile or the full-screen card: weather icons at various angles and range
   rings round the coordinates, in the quiet colours of the theme, instead of a plain empty frame.

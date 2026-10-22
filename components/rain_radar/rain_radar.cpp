@@ -23,6 +23,8 @@ static const char *const OSM_HOST = "https://tile.openstreetmap.org";
 static const char *const RADAR_HOST = "https://tilecache.rainviewer.com";
 static const int MIN_ZOOM = 2;
 static const int MAX_ZOOM = 7;        // RainViewer's limit for radar tiles
+static const int MAX_ICONS = 36;      // the backdrop's icons at most
+static const double CENTRE_SHARE = 0.6;   // the window around centred coordinates must show this share of what the filling block shows
 static const int MAX_CELLS = 4;       // a layer has at most 4 places (2 layers fit the 8 places of a tile)
 static const int MAX_AGE = 3600;      // a frame older than an hour is called old: RainViewer lists two hours at most
 
@@ -64,8 +66,10 @@ static bool path_ok(const std::string &path) {
 //  * "Keep the coordinates in the middle" (default): the block is moved so that the coordinates are the middle of the
 //    card's map room, as large as it can be and still lie within the card. What lies past the same distance on every
 //    side of the coordinates is covered with the card's own colour, so the map is a window around them: the coordinates
-//    are its exact centre. The window is between a third and the whole of the room, as the coordinates fall in their tile.
-//  * Off: the block fills the room and the coordinates lie where they fall; the dot shows the place.
+//    are its exact centre. The window can be much smaller than the room (the nearest edge of the block limits it), so it
+//    is used only when it shows at least CENTRE_SHARE of what the filling block would; otherwise the block fills the room.
+//  * Off, or too small a window: the block (2 x 2, or 3 x 1 and so on, whichever covers most of the room) fills the room
+//    and the coordinates lie where they fall; the dot shows the place.
 class Panel {
  public:
   void build(lv_obj_t *parent, int width, int height, const Config &config, const tessera::Plugin *plugin, int radar_size) {
@@ -88,16 +92,37 @@ class Panel {
     const bool pictures = ui::pictures();
     map_ = pictures && cfg_.has_position && std::min(width_, room_h) >= ui::mm(12);
     if (map_) {
-      pick_grid(room_h);
-      locate();
-      if (!layout(room_h)) map_ = false;
+      // The shape that fills the room best (3 x 1, 2 x 2, ...), and, if asked, the block of 2 x 2 with the coordinates in
+      // its middle: that one is taken only when its window is not much smaller than what the filling block shows.
+      const double fill_area = pick_grid(room_h);
+      const int fill_cols = cols_, fill_rows = rows_;
+      bool centred = false;
+      if (cfg_.center) {
+        cols_ = rows_ = 2;
+        locate();
+        centred = layout_centred(room_h) && 4.0 * hx_ * hy_ >= CENTRE_SHARE * fill_area;
+      }
+      if (!centred) {
+        cols_ = fill_cols;
+        rows_ = fill_rows;
+        locate();
+        if (!layout_fill(room_h)) map_ = false;
+      }
+      cfg_.center = centred;
     }
 
     int top = 0;
     if (map_) {
-      // The ground under the map, in the page's own colour, over the whole room: what the tiles do not cover
-      // looks like more map and not like an empty frame.
-      ground_ = cover(parent, theme::PAGE, 0, 0, width_, room_h);
+      // What the map covers: the window (coordinates in the middle) or the block of tiles.
+      int mx0 = x0_px_, my0 = y0_px_, mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
+      if (cfg_.center) {
+        mx0 = cx_ - hx_;
+        mx1 = cx_ + hx_;
+        my0 = cy_ - hy_;
+        my1 = cy_ + hy_;
+      }
+      // The backdrop under the map: weather icons in the free part of the room, at various angles.
+      decorate(parent, room_h, mx0, my0, mx1, my1);
       // The layers, from the back to the front: the map, then the radar over it; each is cols x rows places.
       for (int layer = 0; layer < 2; ++layer) {
         if (layer == 0 && !cfg_.show_map) continue;
@@ -111,20 +136,18 @@ class Panel {
           }
         }
       }
-      // The window: what lies outside it is hidden under the ground's colour, so the coordinates are its exact centre.
+      // The window: what lies outside it is hidden under the card's colour, so the coordinates are its exact centre.
       if (cfg_.center) {
-        const int mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
+        const int bx1 = x0_px_ + cols_ * tile_, by1 = y0_px_ + rows_ * tile_;
         const int wl = cx_ - hx_, wr = cx_ + hx_, wt = cy_ - hy_, wb = cy_ + hy_;
-        cover(parent, theme::PAGE, x0_px_, y0_px_, wl - x0_px_, my1 - y0_px_);
-        cover(parent, theme::PAGE, wr, y0_px_, mx1 - wr, my1 - y0_px_);
-        cover(parent, theme::PAGE, wl, y0_px_, wr - wl, wt - y0_px_);
-        cover(parent, theme::PAGE, wl, wb, wr - wl, my1 - wb);
+        cover(parent, theme::CARD, x0_px_, y0_px_, wl - x0_px_, by1 - y0_px_);
+        cover(parent, theme::CARD, wr, y0_px_, bx1 - wr, by1 - y0_px_);
+        cover(parent, theme::CARD, wl, y0_px_, wr - wl, wt - y0_px_);
+        cover(parent, theme::CARD, wl, wb, wr - wl, by1 - wb);
       }
-      // The map is light, whatever the screen's look: a dark veil over the whole room for the dark look. The radar is part
-      // of the same picture, so it is dimmed with it.
-      veil_ = cover(parent, theme::CAMERA_PAGE, 0, 0, width_, room_h);
-      // The backdrop of what the map does not cover: weather icons at various angles and rings round the coordinates.
-      decorate(parent, room_h);
+      // The map is light, whatever the screen's look: a dark veil over the map alone (not the backdrop) for the dark
+      // look. The radar is part of the same picture, so it is dimmed with it.
+      veil_ = cover(parent, theme::CAMERA_PAGE, mx0, my0, mx1 - mx0, my1 - my0);
       if (cfg_.marker) {
         const int ring = ui::mm(3), dot = ui::mm(2);
         ring_ = cover(parent, theme::CARD, dot_x_ - ring / 2, dot_y_ - ring / 2, ring, ring);
@@ -210,64 +233,54 @@ class Panel {
     return b;
   }
 
-  // Rings round the coordinates, like the range rings of a radar screen, and weather icons scattered at various angles over
-  // what the map does not cover (the free part of the room), all in the quiet colours of the theme. Drawn in one
-  // container that clips them to the room, so none runs over the words under the map.
-  void decorate(lv_obj_t *parent, int room_h) {
-    lv_obj_t *deco = cover(parent, theme::PAGE, 0, 0, width_, room_h);
+  // A backdrop of Tessera's weather icons over what the map does not cover (the free part of the room), in the quiet
+  // colours of the theme, each at its own angle and in one of two sizes. The places are thrown one by one with a fixed
+  // seed (so the backdrop is the same on every screen and does not jump), each at least a little way from the others
+  // and wholly inside the room, whatever the turn, and none over the map. Nothing here reaches past the room: an object
+  // that did, on a tile that touches the screen's edge, once crashed a screen.
+  void decorate(lv_obj_t *parent, int room_h, int mx0, int my0, int mx1, int my1) {
+    const int big = ui::line_height(Font::ICON), small = ui::line_height(Font::ICON_SMALL);
+    if (big < 4 || big * 2 > std::min(width_, room_h)) return;   // a room this small has no space for a backdrop
+    lv_obj_t *deco = cover(parent, theme::CARD, 0, 0, width_, room_h);
     if (!deco) return;
     lv_obj_set_style_bg_opa(deco, LV_OPA_TRANSP, 0);
-    // The area the map covers: the window (coordinates in the middle) or the block.
-    int mx0 = x0_px_, my0 = y0_px_, mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
-    if (cfg_.center) {
-      mx0 = cx_ - hx_;
-      mx1 = cx_ + hx_;
-      my0 = cy_ - hy_;
-      my1 = cy_ + hy_;
-    }
-    // Rings: three, a tile apart, centred on the dot; only their parts in the free area show (the map hides the rest).
-    for (int k = 1; k <= 3; ++k) {
-      const int r = k * tile_;
-      lv_obj_t *ring = ui::block(deco, theme::LINE);
-      lv_obj_set_size(ring, 2 * r, 2 * r);
-      lv_obj_set_pos(ring, dot_x_ - r, dot_y_ - r);
-      lv_obj_remove_flag(ring, LV_OBJ_FLAG_CLICKABLE);
-      lv_obj_remove_flag(ring, LV_OBJ_FLAG_SCROLLABLE);
-      lv_obj_set_style_radius(ring, LV_RADIUS_CIRCLE, 0);
-      lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, 0);
-      lv_obj_set_style_border_width(ring, 1, 0);
-      lv_obj_set_style_border_color(ring, theme::color(theme::LINE), 0);
-      lv_obj_set_style_border_opa(ring, LV_OPA_60, 0);
-    }
-    // Icons: Tessera's weather icons, each at its own angle, where they fit whole in the free area. A fixed scatter (the
-    // same on every screen and every look) so the backdrop does not jump; none over the map.
-    static const uint32_t ICONS[] = {0xF0596, 0xF0597, 0xF0590, 0xF0595, 0xF0599, 0xF0598, 0xF059D, 0xF067E, 0xF0593, 0xF0591};
-    static const int ANGLES[] = {-25, 18, -8, 30, 12, -32, 22, -15, 35, -5};   // degrees
-    const int box = ui::line_height(Font::ICON);
-    if (box * 3 > std::min(width_, room_h)) return;   // a room this small has no space for a backdrop
-    const int cols = std::max(1, width_ / (box * 2)), rows = std::max(1, room_h / (box * 2));
+    static const uint32_t ICONS[] = {0xF0596, 0xF0597, 0xF0590, 0xF0595, 0xF0599, 0xF0598, 0xF059D, 0xF067E, 0xF0593, 0xF0591, 0xF0592, 0xF067F};
+    struct Spot {
+      int x, y, r;
+    };
+    Spot spots[MAX_ICONS];
     int n = 0;
-    for (int r = 0; r < rows && n < 18; ++r) {
-      for (int c = 0; c < cols && n < 18; ++c, ++n) {
-        const int k = n % 10;
-        // A cell's icon sits at a fixed offset inside it, different from cell to cell.
-        const int cell_w = width_ / cols, cell_h = room_h / rows;
-        const int x = c * cell_w + (cell_w - box) / 2 + ((n * 7) % 5 - 2) * box / 8;
-        const int y = r * cell_h + (cell_h - box) / 2 + ((n * 11) % 5 - 2) * box / 8;
-        const int pad = box / 2;   // room for the turn: the corners swing out of the box
-        if (x < 0 || y < 0 || x + box > width_ || y + box > room_h) continue;
-        const bool over_map = x + box + pad > mx0 && x - pad < mx1 && y + box + pad > my0 && y - pad < my1;
-        if (over_map) continue;
-        lv_obj_t *icon = ui::label(deco, Font::ICON, theme::TRACK);
-        lv_obj_set_size(icon, box, box);
-        lv_obj_set_pos(icon, x, y);
-        lv_obj_remove_flag(icon, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_style_text_align(icon, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_style_transform_pivot_x(icon, box / 2, 0);
-        lv_obj_set_style_transform_pivot_y(icon, box / 2, 0);
-        lv_obj_set_style_transform_rotation(icon, ANGLES[(n * 3) % 10] * 10, 0);
-        ui::set_text(icon, ::tessera::ui::icon(ICONS[k]));
+    uint32_t seed = 2463534242u ^ static_cast<uint32_t>(width_ * 7919 + room_h * 104729);
+    auto next = [&seed](int bound) {
+      seed = seed * 1664525u + 1013904223u;
+      return static_cast<int>((seed >> 8) % static_cast<uint32_t>(std::max(1, bound)));
+    };
+    // Enough icons for the free area, at most MAX_ICONS (each costs a little memory).
+    const long free_area = static_cast<long>(width_) * room_h - static_cast<long>(mx1 - mx0) * (my1 - my0);
+    const int wanted = static_cast<int>(std::min<long>(MAX_ICONS, free_area / (static_cast<long>(big) * big * 3)));
+    for (int attempt = 0; attempt < 700 && n < wanted; ++attempt) {
+      const bool is_big = next(3) != 0;
+      const int box = is_big ? big : small;
+      const int r = box * 3 / 4;   // the radius of the circle the turned icon stays within
+      if (width_ < 2 * r || room_h < 2 * r) continue;
+      const int cx = r + next(width_ - 2 * r + 1), cy = r + next(room_h - 2 * r + 1);
+      if (cx + r > mx0 && cx - r < mx1 && cy + r > my0 && cy - r < my1) continue;   // over the map
+      bool free_spot = true;
+      for (int k = 0; k < n && free_spot; ++k) {
+        const long dx = cx - spots[k].x, dy = cy - spots[k].y, min = (r + spots[k].r) * 115L / 100;
+        free_spot = dx * dx + dy * dy >= min * min;
       }
+      if (!free_spot) continue;
+      spots[n++] = {cx, cy, r};
+      lv_obj_t *icon = ui::label(deco, is_big ? Font::ICON : Font::ICON_SMALL, theme::TRACK);
+      lv_obj_set_size(icon, box, box);
+      lv_obj_set_pos(icon, cx - box / 2, cy - box / 2);
+      lv_obj_remove_flag(icon, LV_OBJ_FLAG_CLICKABLE);
+      lv_obj_set_style_text_align(icon, LV_TEXT_ALIGN_CENTER, 0);
+      lv_obj_set_style_transform_pivot_x(icon, box / 2, 0);
+      lv_obj_set_style_transform_pivot_y(icon, box / 2, 0);
+      lv_obj_set_style_transform_rotation(icon, (next(91) - 45) * 10, 0);   // -45 to 45 degrees, in tenths
+      ui::set_text(icon, ::tessera::ui::icon(ICONS[next(12)]));
     }
   }
 
@@ -287,13 +300,11 @@ class Panel {
     py_ = std::max(0.0, std::min(static_cast<double>(rows_), y - y0));
   }
 
-  // The shape of the block: the one of at most 4 tiles that covers most of the room. With the coordinates kept in the
-  // middle it is 2 x 2 (a single row could not keep them central); otherwise 3 x 1, 4 x 1 and their upright forms
-  // serve a room that is much wider or taller than it is high or wide.
-  void pick_grid(int room_h) {
+  // The shape of the block that fills the room best, of at most 4 tiles: 2 x 2, or 3 x 1, 4 x 1 and their upright forms for
+  // a room much wider or taller than it is high or wide. Sets cols_ and rows_ and returns the area it covers.
+  double pick_grid(int room_h) {
     static const int shapes[][2] = {{2, 2}, {3, 1}, {1, 3}, {4, 1}, {1, 4}, {2, 1}, {1, 2}};
     cols_ = rows_ = 2;
-    if (cfg_.center) return;
     double best = 0;
     for (const auto &sh : shapes) {
       const int t = std::min(width_ / sh[0], room_h / sh[1]);
@@ -304,28 +315,32 @@ class Panel {
         rows_ = sh[1];
       }
     }
+    return best;
   }
 
-  // The size of a tile and where the block lies in the card's room (width_ x room_h): false when nothing fits.
-  bool layout(int room_h) {
+  // The coordinates in the middle of the room (width_ x room_h), the block as large as it can be and still lie wholly in
+  // the room: false when the window around them would be too small to be a map.
+  bool layout_centred(int room_h) {
     const double eps = 0.001;
     cx_ = width_ / 2;
     cy_ = room_h / 2;
-    if (cfg_.center) {
-      const double fit = std::min(std::min(cx_ / std::max(px_, eps), (width_ - cx_) / std::max(cols_ - px_, eps)),
-                                  std::min(cy_ / std::max(py_, eps), (room_h - cy_) / std::max(rows_ - py_, eps)));
-      tile_ = static_cast<int>(std::floor(fit));
-      hx_ = static_cast<int>(std::floor(std::min(px_, cols_ - px_) * tile_));
-      hy_ = static_cast<int>(std::floor(std::min(py_, rows_ - py_) * tile_));
-      if (tile_ >= 1 && std::min(hx_, hy_) * 2 >= ui::mm(12)) {
-        x0_px_ = cx_ - static_cast<int>(std::lround(px_ * tile_));
-        y0_px_ = cy_ - static_cast<int>(std::lround(py_ * tile_));
-        dot_x_ = cx_;
-        dot_y_ = cy_;
-        return true;
-      }
-      cfg_.center = false;   // a window that small is no map: the block fills the room instead
-    }
+    const double fit = std::min(std::min(cx_ / std::max(px_, eps), (width_ - cx_) / std::max(cols_ - px_, eps)),
+                                std::min(cy_ / std::max(py_, eps), (room_h - cy_) / std::max(rows_ - py_, eps)));
+    tile_ = static_cast<int>(std::floor(fit));
+    hx_ = static_cast<int>(std::floor(std::min(px_, cols_ - px_) * tile_));
+    hy_ = static_cast<int>(std::floor(std::min(py_, rows_ - py_) * tile_));
+    if (tile_ < 1 || std::min(hx_, hy_) * 2 < ui::mm(12)) return false;
+    x0_px_ = cx_ - static_cast<int>(std::lround(px_ * tile_));
+    y0_px_ = cy_ - static_cast<int>(std::lround(py_ * tile_));
+    dot_x_ = cx_;
+    dot_y_ = cy_;
+    return true;
+  }
+
+  // The block as large as the room allows, in its middle; the dot shows where the coordinates lie in it.
+  bool layout_fill(int room_h) {
+    cx_ = width_ / 2;
+    cy_ = room_h / 2;
     tile_ = std::min(width_ / cols_, room_h / rows_);
     if (tile_ < 1) return false;
     x0_px_ = (width_ - cols_ * tile_) / 2;
@@ -378,7 +393,7 @@ class Panel {
   uint32_t frame_at_ = 0;
   tessera::Text path_, wait_, note_text_;   // kept as long as the card: PSRAM first (docs/FIRMWARE_API.md, "Memory")
   lv_obj_t *map_places_[MAX_CELLS]{}, *radar_places_[MAX_CELLS]{};
-  lv_obj_t *ground_{}, *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
+  lv_obj_t *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
 };
 
 // The options of a tile, with the defaults and limits applied.
