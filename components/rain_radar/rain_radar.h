@@ -5,30 +5,26 @@
 
 namespace esphome::rain_radar {
 
-// What a map needs to be drawn: the options of the tile that shows it (or opened the card), as the editor set them.
 enum class Look { AUTO, LIGHT, DARK };
 struct Config {
   double lat = 0, lon = 0;
   int zoom = 6;
   bool has_position = false, show_map = true, marker = true, smooth = true, snow = true, center = true, center_auto = false, fullscreen = true;
   Look look = Look::AUTO;
-  int dim = 40;                     // how strongly the dark look dims the map, percent
-  bool tiles = false;               // the numbers of the map tile under the map (to check it against openstreetmap.org)
-  std::string marker_icon = "dot";   // "dot" or the name of an icon
+  int dim = 40;
+  bool tiles = false;
+  std::string marker_icon = "dot";
   std::string marker_color = "blue";
 };
 
-// The plugin: an ESPHome component and a tessera::Plugin. It registers its tile and its card in setup().
-// A card is given nothing but the tile it was opened from, so the tile leaves its options and the newest radar frame here
-// just before it opens the card (one card is open at a time).
 class RainRadar : public Component, public tessera::Plugin {
  public:
   void setup() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
 
-  Config config;                // the options of the tile that opened the card
-  tessera::Text frame_path;     // the newest radar frame's path as RainViewer gave it, "" for none yet
-  uint32_t frame_at = 0;        // its time, seconds since 1970
+  Config config;
+  tessera::Text frame_path;
+  uint32_t frame_at = 0;
 };
 
 }  // namespace esphome::rain_radar

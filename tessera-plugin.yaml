@@ -1,9 +1,5 @@
-# The manifest: who made the plugin, what it may do, and what the Tessera app shows. It holds no code and no words:
-# every name, label and hint below is a key into translations/<language>.json, part "app".
-# Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.4.2
-# 0.13 is the first API with pictures on a card (the tile opens a card with the map over the whole glass).
+version: 0.4.3
 api: "0.13"
 icon: weather-pouring
 maintainer: MattechPC
@@ -16,9 +12,6 @@ boards: any
 flash_kb: 6
 
 permissions:
-  # api.rainviewer.com: the list of radar frames (the only supported RainViewer endpoint).
-  # tilecache.rainviewer.com: the radar tiles of a frame (the `host` the RainViewer API names).
-  # tile.openstreetmap.org: the standard OpenStreetMap map tiles.
   network: [api.rainviewer.com, tilecache.rainviewer.com, tile.openstreetmap.org]
 attributes: [cloud]
 privacy: https://github.com/MattechPC/Rain-Radar#privacy
@@ -27,37 +20,23 @@ tiles:
   - id: radar
     name: tile_name
     icon: weather-pouring
-    # From one cell, so a new tile can be made larger in the editor: a tile too small for the map says so in words (a
-    # tile whose smallest size is 2x2 could never leave 1x1: the handles resize one side at a time). Up to 9 x 9, the
-    # largest size a manifest may name; the screen's own grid decides what it offers.
     sizes: { min: 1x1, max: 9x9 }
-    # A few labels, a veil, a dot, the backdrop (up to 36 icons), four map places and four radar places, and a path.
     memory: 12000
-    # A map of up to 4 tiles with the radar over it: 4 places for the map and 4 for the radar.
     pictures: 8
     data: frames
     example: tile_example
-    # How the editor draws the tile: it cannot run the C++, so the radar answer shows as a line that counts the age of the
-    # newest frame, live from the same fetch the screen uses.
     preview: { title: "RainViewer", countdown: at }
     options:
-      # Where the map is centred, in degrees, such as 52.2297 and 21.0122 (a comma works as the decimal point).
       - { id: lat, kind: text, label: lat, hint: lat_hint, default: "52.2297" }
       - { id: lon, kind: text, label: lon, hint: lon_hint, default: "21.0122" }
-      # RainViewer's radar tiles go to zoom 7 at most; zoom 2 shows about a continent.
       - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 6, label: zoom, hint: zoom_hint }
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
-      # How the dark look dims the light map, in percent.
       - { id: dim, kind: number, min: 0, max: 80, step: 5, unit: "%", default: 40, label: dim, hint: dim_hint }
-      # The coordinates exactly in the middle of the map (the map is then a window around them), only when that window stays
-      # large (auto), or the map fills the tile (off).
       - { id: centering, kind: choice, label: centering, hint: centering_hint, default: "on",
           choices: [{ value: "on", label: centering_on }, { value: auto, label: centering_auto }, { value: "off", label: centering_off }] }
-      # A tap opens the map over the whole screen, as a camera tile of Tessera does.
       - { id: fullscreen, kind: toggle, label: fullscreen, hint: fullscreen_hint, default: true }
       - { id: map, kind: toggle, label: map, hint: map_hint, default: true }
-      # The marker: the standard dot or an icon of Tessera's set, in a colour of the theme.
       - { id: marker_icon, kind: choice, label: marker_icon, hint: marker_icon_hint, default: dot,
           choices: [{ value: none, label: mi_none }, { value: dot, label: mi_dot }, { value: pin, label: mi_pin }, { value: pin_outline, label: mi_pin_outline },
                     { value: home, label: mi_home }, { value: home_pin, label: mi_home_pin }, { value: cross, label: mi_cross },
@@ -69,18 +48,12 @@ tiles:
                     { value: amber, label: mc_amber }, { value: purple, label: mc_purple }, { value: white, label: mc_white },
                     { value: black, label: mc_black }] }
       - { id: snow, kind: toggle, label: snow, hint: snow_hint, default: true }
-      # The numbers of the map tile (zoom/x/y) after the time of the radar, to check the map against openstreetmap.org.
       - { id: tiles, kind: toggle, label: tiles, hint: tiles_hint, default: false }
 
 cards:
-  # The map over the whole glass, opened by a tap on the tile when its option Open full screen on tap is on.
-  # It shows the radar's 512-pixel tiles and has 4 places for the map and 4 for the radar.
   - { id: radar_card, name: card_name, wide: true, pictures: 8 }
 
 fetch:
-  # The radar frames of the last two hours, one every ten minutes, as RainViewer lists them. The tile wants the newest,
-  # the last of the list: sorted newest first and cut to one. The `path` is used exactly as RainViewer gives it; the
-  # app asks every five minutes, which is also how often RainViewer refreshes (the app keeps the answer in between).
   - id: frames
     url: https://api.rainviewer.com/public/weather-maps.json
     every: 5m

@@ -1,3 +1,8 @@
+## 0.4.3
+- Fix configuration validation errors on slider options.
+- Fix map sizing to cover 100% of tile area.
+- Fix background color binding to theme::dark.
+
 # Changelog
 
 ## 0.4.2
