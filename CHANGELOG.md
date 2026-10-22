@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2
+- **Marker**: the standard dot in a colour of your choice, or an icon from a list (pin, home, crosshair, car, ...), or
+  none. This replaces the **Show the marker** switch.
+- **Dimming in the dark look** is an option now (0 to 80%, 40% by default); before it was a fixed 70%.
+- **Coordinates in the middle** has three settings: On (always in the middle, the default), Auto (only when the window
+  around the coordinates stays large) and Off. 0.4.1's automatic rule had taken over the On setting.
+- The backdrop of weather icons shows on the full-screen card again: the masks of the centred window had covered it.
+- With the look of the map set to Light or Dark, the ground under the map and the backdrop take that look too.
+- **Tile numbers**: an option that shows the zoom/x/y of the map tile after the time, to check the map against
+  openstreetmap.org. **Smooth radar** is gone (the radar is always smoothed); a tile may have at most 12 options.
+
 ## 0.4.1
 - Fixes a crash of the screen with a tile as tall as the screen (4 across, 5 down): the range rings of 0.4.0 reached past
   the edge of the tile and are gone.

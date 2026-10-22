@@ -100,7 +100,7 @@ class Panel {
       if (cfg_.center) {
         cols_ = rows_ = 2;
         locate();
-        centred = layout_centred(room_h) && 4.0 * hx_ * hy_ >= CENTRE_SHARE * fill_area;
+        centred = layout_centred(room_h) && (!cfg_.center_auto || 4.0 * hx_ * hy_ >= CENTRE_SHARE * fill_area);
       }
       if (!centred) {
         cols_ = fill_cols;
@@ -121,8 +121,8 @@ class Panel {
         my0 = cy_ - hy_;
         my1 = cy_ + hy_;
       }
-      // The backdrop under the map: weather icons in the free part of the room, at various angles.
-      decorate(parent, room_h, mx0, my0, mx1, my1);
+      // The ground under everything, in the colour of the look the map has (the card's own when it follows the screen).
+      ground_ = cover(parent, ground_role(), 0, 0, width_, room_h);
       // The layers, from the back to the front: the map, then the radar over it; each is cols x rows places.
       for (int layer = 0; layer < 2; ++layer) {
         if (layer == 0 && !cfg_.show_map) continue;
@@ -140,20 +140,37 @@ class Panel {
       if (cfg_.center) {
         const int bx1 = x0_px_ + cols_ * tile_, by1 = y0_px_ + rows_ * tile_;
         const int wl = cx_ - hx_, wr = cx_ + hx_, wt = cy_ - hy_, wb = cy_ + hy_;
-        cover(parent, theme::CARD, x0_px_, y0_px_, wl - x0_px_, by1 - y0_px_);
-        cover(parent, theme::CARD, wr, y0_px_, bx1 - wr, by1 - y0_px_);
-        cover(parent, theme::CARD, wl, y0_px_, wr - wl, wt - y0_px_);
-        cover(parent, theme::CARD, wl, wb, wr - wl, by1 - wb);
+        masks_[0] = cover(parent, ground_role(), x0_px_, y0_px_, wl - x0_px_, by1 - y0_px_);
+        masks_[1] = cover(parent, ground_role(), wr, y0_px_, bx1 - wr, by1 - y0_px_);
+        masks_[2] = cover(parent, ground_role(), wl, y0_px_, wr - wl, wt - y0_px_);
+        masks_[3] = cover(parent, ground_role(), wl, wb, wr - wl, by1 - wb);
       }
+      // The backdrop: weather icons in the free part of the room, at various angles, none over the map. It is made after
+      // the masks of the window, which would hide what lay under them.
+      decorate(parent, room_h, mx0, my0, mx1, my1);
       // The map is light, whatever the screen's look: a dark veil over the map alone (not the backdrop) for the dark
       // look. The radar is part of the same picture, so it is dimmed with it.
       veil_ = cover(parent, theme::CAMERA_PAGE, mx0, my0, mx1 - mx0, my1 - my0);
       if (cfg_.marker) {
-        const int ring = ui::mm(3), dot = ui::mm(2);
-        ring_ = cover(parent, theme::CARD, dot_x_ - ring / 2, dot_y_ - ring / 2, ring, ring);
-        if (ring_) lv_obj_set_style_radius(ring_, LV_RADIUS_CIRCLE, 0);
-        dot_ = cover(parent, theme::ACCENT, dot_x_ - dot / 2, dot_y_ - dot / 2, dot, dot);
-        if (dot_) lv_obj_set_style_radius(dot_, LV_RADIUS_CIRCLE, 0);
+        const uint32_t glyph = marker_glyph(cfg_.marker_icon);
+        if (glyph) {
+          // An icon of the person's choice, in the colour chosen. A pin's tip is on the coordinates, any other icon's middle.
+          const int box = ui::line_height(Font::ICON);
+          const bool pin = cfg_.marker_icon == "pin" || cfg_.marker_icon == "pin_outline" || cfg_.marker_icon == "home_pin";
+          icon_ = ui::label(parent, Font::ICON, theme::INK);
+          lv_obj_set_size(icon_, box, box);
+          lv_obj_set_pos(icon_, dot_x_ - box / 2, dot_y_ - box / 2 - (pin ? box / 2 : 0));
+          lv_obj_remove_flag(icon_, LV_OBJ_FLAG_CLICKABLE);
+          lv_obj_set_style_text_align(icon_, LV_TEXT_ALIGN_CENTER, 0);
+          ui::set_text(icon_, ::tessera::ui::icon(glyph));
+        } else {
+          const int ring = ui::mm(3), dot = ui::mm(2);
+          ring_ = cover(parent, cfg_.marker_color == "white" ? theme::CAMERA_PAGE : theme::CARD, dot_x_ - ring / 2, dot_y_ - ring / 2, ring, ring);
+          if (ring_) lv_obj_set_style_radius(ring_, LV_RADIUS_CIRCLE, 0);
+          dot_ = cover(parent, theme::ACCENT, dot_x_ - dot / 2, dot_y_ - dot / 2, dot, dot);
+          if (dot_) lv_obj_set_style_radius(dot_, LV_RADIUS_CIRCLE, 0);
+        }
+        paint_marker();
       }
       top = room_h + gap;
     } else {
@@ -200,6 +217,7 @@ class Panel {
     } else {
       line = plugin_->text("radar_loading");
     }
+    if (cfg_.tiles && map_) line += "  ·  " + std::to_string(cfg_.zoom) + "/" + std::to_string(x0_) + "/" + std::to_string(y0_);
     ui::set_text(status_, line);
     if (note_) {
       std::string note;
@@ -218,6 +236,8 @@ class Panel {
     ui::set_color(credit_, theme::MUTED);
     if (note_) ui::set_color(note_, theme::MUTED);
     paint_look();
+    paint_backdrop();
+    paint_marker();
   }
 
  private:
@@ -272,7 +292,9 @@ class Panel {
       }
       if (!free_spot) continue;
       spots[n++] = {cx, cy, r};
-      lv_obj_t *icon = ui::label(deco, is_big ? Font::ICON : Font::ICON_SMALL, theme::TRACK);
+      lv_obj_t *icon = ui::label(deco, is_big ? Font::ICON : Font::ICON_SMALL, icon_role());
+      icons_[n - 1] = icon;
+      icon_count_ = n;
       lv_obj_set_size(icon, box, box);
       lv_obj_set_pos(icon, cx - box / 2, cy - box / 2);
       lv_obj_remove_flag(icon, LV_OBJ_FLAG_CLICKABLE);
@@ -380,33 +402,91 @@ class Panel {
   // has no dark map, and the providers that have one ask for an account key, so the light map is dimmed.
   void paint_look() {
     if (!veil_) return;
-    const bool dark = cfg_.look == Look::DARK || (cfg_.look == Look::AUTO && ::theme::dark);
-    lv_obj_set_style_bg_opa(veil_, dark ? LV_OPA_70 : LV_OPA_TRANSP, 0);
+    lv_obj_set_style_bg_opa(veil_, dark_look() ? static_cast<lv_opa_t>(255 * cfg_.dim / 100) : LV_OPA_TRANSP, 0);
+  }
+
+  bool dark_look() const { return cfg_.look == Look::DARK || (cfg_.look == Look::AUTO && ::theme::dark); }
+
+  // The ground under the map and its backdrop. It is the card's own colour while the map follows the screen, and a colour
+  // that is dark (or light) in both looks when the look of the map is chosen: a dark map then lies on a dark ground.
+  theme::Role ground_role() const {
+    if (cfg_.look == Look::AUTO) return theme::CARD;
+    return cfg_.look == Look::DARK ? theme::CAMERA_PAGE : theme::QR_LIGHT;
+  }
+  theme::Role icon_role() const {
+    if (cfg_.look == Look::AUTO) return theme::TRACK;
+    return cfg_.look == Look::DARK ? theme::CAMERA_TRACK : theme::CAMERA_INK;
+  }
+
+  // The ground, the masks of the window and the backdrop's icons take the colours of the look again.
+  void paint_backdrop() {
+    if (ground_) lv_obj_set_style_bg_color(ground_, theme::color(ground_role()), 0);
+    for (lv_obj_t *m : masks_)
+      if (m) lv_obj_set_style_bg_color(m, theme::color(ground_role()), 0);
+    for (int k = 0; k < icon_count_; ++k)
+      if (icons_[k]) lv_obj_set_style_text_color(icons_[k], theme::color(icon_role()), 0);
+  }
+
+  // The codepoint of the marker's icon in Tessera's icon set; 0 for the standard marker, a dot in a ring.
+  static uint32_t marker_glyph(const std::string &name) {
+    static const struct {
+      const char *name;
+      uint32_t code;
+    } TABLE[] = {{"pin", 0xF034E},     {"pin_outline", 0xF07D9}, {"home", 0xF02DC},  {"home_pin", 0xF05F8}, {"cross", 0xF01A3},
+                 {"heart", 0xF02D1},   {"car", 0xF010B},         {"tree", 0xF0531},  {"person", 0xF0004},   {"compass", 0xF1382},
+                 {"rain", 0xF0596},    {"tower", 0xF0D3E},       {"bike", 0xF00A3}};
+    for (const auto &entry : TABLE)
+      if (name == entry.name) return entry.code;
+    return 0;
+  }
+
+  // The marker's colour: roles of the theme, the tones of Tessera for red and green.
+  lv_color_t marker_colour() const {
+    const std::string &c = cfg_.marker_color;
+    if (c == "red") return ui::tone_color(tessera::Tone::ALERT, theme::ACCENT);
+    if (c == "green") return ui::tone_color(tessera::Tone::GOOD, theme::ACCENT);
+    if (c == "amber") return theme::color(theme::MARK_AMBER);
+    if (c == "purple") return theme::color(theme::MARK_PURPLE);
+    if (c == "white") return theme::color(theme::QR_LIGHT);
+    if (c == "black") return theme::color(theme::QR_DARK);
+    return theme::color(theme::ACCENT);
+  }
+
+  void paint_marker() {
+    if (dot_) lv_obj_set_style_bg_color(dot_, marker_colour(), 0);
+    if (icon_) lv_obj_set_style_text_color(icon_, marker_colour(), 0);
   }
 
   const tessera::Plugin *plugin_ = nullptr;
   Config cfg_;
   int cols_ = 2, rows_ = 2, width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
   int x0_px_ = 0, y0_px_ = 0, cx_ = 0, cy_ = 0, hx_ = 0, hy_ = 0, dot_x_ = 0, dot_y_ = 0;
+  int icon_count_ = 0;
   bool map_ = false;
   double px_ = 1, py_ = 1;
   uint32_t frame_at_ = 0;
   tessera::Text path_, wait_, note_text_;   // kept as long as the card: PSRAM first (docs/FIRMWARE_API.md, "Memory")
   lv_obj_t *map_places_[MAX_CELLS]{}, *radar_places_[MAX_CELLS]{};
-  lv_obj_t *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
+  lv_obj_t *ground_{}, *masks_[4]{}, *icons_[MAX_ICONS]{}, *icon_{}, *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
 };
 
 // The options of a tile, with the defaults and limits applied.
 static Config read_config(JsonObjectConst options) {
   Config c;
   c.show_map = options["map"] | true;
-  c.marker = options["marker"] | true;
+  c.marker_icon = std::string(options["marker_icon"] | "dot");
+  c.marker = c.marker_icon != "none";
+  c.tiles = options["tiles"] | false;
+  const std::string centring = std::string(options["centering"] | "on");   // on: always in the middle; auto: when the map stays large
+  c.center = centring != "off";
+  c.center_auto = centring == "auto";
+  c.dim = std::max(0, std::min(80, static_cast<int>(options["dim"] | 40)));
+  c.marker_color = std::string(options["marker_color"] | "blue");
   c.smooth = options["smooth"] | true;
   c.snow = options["snow"] | true;
   const std::string look = options["look"] | "auto";
   c.look = look == "dark" ? Look::DARK : look == "light" ? Look::LIGHT : Look::AUTO;
   c.zoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, static_cast<int>(options["zoom"] | 6)));
-  c.center = options["center"] | true;
   c.fullscreen = options["fullscreen"] | true;
   c.has_position = parse_degrees(options["lat"] | "", 85.0, &c.lat) && parse_degrees(options["lon"] | "", 180.0, &c.lon);
   return c;

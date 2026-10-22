@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.4.1
+version: 0.4.2
 # 0.13 is the first API with pictures on a card (the tile opens a card with the map over the whole glass).
 api: "0.13"
 icon: weather-pouring
@@ -48,14 +48,29 @@ tiles:
       - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 6, label: zoom, hint: zoom_hint }
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
-      # Keep the coordinates exactly in the middle of the map (the map is then a window around them), or fill the tile.
-      - { id: center, kind: toggle, label: center, hint: center_hint, default: true }
+      # How the dark look dims the light map, in percent.
+      - { id: dim, kind: number, min: 0, max: 80, step: 5, unit: "%", default: 40, label: dim, hint: dim_hint }
+      # The coordinates exactly in the middle of the map (the map is then a window around them), only when that window stays
+      # large (auto), or the map fills the tile (off).
+      - { id: centering, kind: choice, label: centering, hint: centering_hint, default: "on",
+          choices: [{ value: "on", label: centering_on }, { value: auto, label: centering_auto }, { value: "off", label: centering_off }] }
       # A tap opens the map over the whole screen, as a camera tile of Tessera does.
       - { id: fullscreen, kind: toggle, label: fullscreen, hint: fullscreen_hint, default: true }
       - { id: map, kind: toggle, label: map, hint: map_hint, default: true }
-      - { id: marker, kind: toggle, label: marker, hint: marker_hint, default: true }
-      - { id: smooth, kind: toggle, label: smooth, hint: smooth_hint, default: true }
+      # The marker: the standard dot or an icon of Tessera's set, in a colour of the theme.
+      - { id: marker_icon, kind: choice, label: marker_icon, hint: marker_icon_hint, default: dot,
+          choices: [{ value: none, label: mi_none }, { value: dot, label: mi_dot }, { value: pin, label: mi_pin }, { value: pin_outline, label: mi_pin_outline },
+                    { value: home, label: mi_home }, { value: home_pin, label: mi_home_pin }, { value: cross, label: mi_cross },
+                    { value: heart, label: mi_heart }, { value: car, label: mi_car }, { value: tree, label: mi_tree },
+                    { value: person, label: mi_person }, { value: compass, label: mi_compass }, { value: rain, label: mi_rain },
+                    { value: tower, label: mi_tower }, { value: bike, label: mi_bike }] }
+      - { id: marker_color, kind: choice, label: marker_color, hint: marker_color_hint, default: blue,
+          choices: [{ value: blue, label: mc_blue }, { value: red, label: mc_red }, { value: green, label: mc_green },
+                    { value: amber, label: mc_amber }, { value: purple, label: mc_purple }, { value: white, label: mc_white },
+                    { value: black, label: mc_black }] }
       - { id: snow, kind: toggle, label: snow, hint: snow_hint, default: true }
+      # The numbers of the map tile (zoom/x/y) after the time of the radar, to check the map against openstreetmap.org.
+      - { id: tiles, kind: toggle, label: tiles, hint: tiles_hint, default: false }
 
 cards:
   # The map over the whole glass, opened by a tap on the tile when its option Open full screen on tap is on.

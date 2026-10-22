@@ -18,20 +18,22 @@ Weather data by [RainViewer](https://www.rainviewer.com).
    west are negative; a comma works as the decimal point).
 4. Choose the **Zoom**, from 2 (about a continent) to 7 (about a region). 7 is the most RainViewer's radar offers.
 5. **Open full screen on tap** (on by default) opens the map over the whole screen when you tap it, as a camera tile
-   does. **Coordinates in the middle** (on by default, used when the map stays large) is explained below.
+   does. **Coordinates in the middle** is explained below.
 6. Choose the **Look of the map**: *Follow the screen* dims the map when the screen is in its dark look and leaves it
-   light in the light look; *Light* and *Dark* keep it one way whatever the screen does.
+   light in the light look; *Light* and *Dark* keep it one way whatever the screen does. **Dimming in the dark look**
+   says how strongly (40% by default).
+7. Choose the **Marker**: the standard dot, an icon from the list, or none, and its **colour**.
 
 ## Good to know
 
 - The map is made of up to four OpenStreetMap tiles with the radar's tiles exactly over them. Tessera can show a picture
   only whole, and only inside the tile (at most 8 pictures per tile), so a map cannot be cut to the exact shape of a
   tile. What the map tiles do not cover shows a quiet backdrop of weather icons and range rings in the theme's colours, so the
-  tile and the full-screen card do not look empty. With **Coordinates in the middle** on, the map is 2 × 2 tiles moved until your coordinates are the middle of the tile, and the
-  part that does not lie evenly around them is hidden. That window can be much smaller than the tile, so it is used only
-  when it keeps at least 60% of what the filling map would show; otherwise (and with the option off) the map takes the
-  shape of up to four tiles (2 × 2, 3 × 1, 4 × 1 or upright) that covers most of the tile, and the dot shows where the
-  coordinates are.
+  tile and the full-screen card do not look empty. **Coordinates in the middle** has three settings. *On* moves the map until your coordinates are the middle of the
+  tile and hides the part that does not lie evenly around them; that window can be much smaller than the tile. *Auto*
+  does so only when the window keeps at least 60% of what the filling map would show. *Off*, and Auto when the window
+  would be small, give a map of up to four tiles (2 × 2, 3 × 1, 4 × 1 or upright) that covers most of the tile, with the
+  dot where the coordinates are.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light
