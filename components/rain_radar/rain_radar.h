@@ -15,7 +15,6 @@ struct Config {
   int dim = 40;                     // how strongly the dark look dims the map, percent
   std::string marker_icon = "dot";   // "dot" or the name of an icon
   std::string marker_color = "blue";
-  std::string marker_hex;           // the person's own colour, "#RRGGBB"; empty for the preset above
 };
 
 // The plugin: an ESPHome component and a tessera::Plugin. It registers its tile and its card in setup().

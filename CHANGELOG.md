@@ -1,8 +1,17 @@
 # Changelog
 
+## 0.5.2
+- The option **Own colour (hex)** of 0.5.1 is gone again: it was a 13th key on a tile that already held 12, which Tessera
+  refuses ("Invalid or unsupported page configuration fields" when a colour was changed). The options are now the same
+  keys as 0.5.0 or fewer, so a tile of 0.5.0 or 0.5.1 can be edited without being added again.
+- With the coordinates in the middle the map is a window evenly round them (the rest of the block is hidden under the
+  backdrop), so on the full screen it no longer sticks to the top. Auto keeps the window when it is at least 30% of the tile.
+- On a squarish tile Auto shows a single map tile at zoom 7 (about 190 km across) when the coordinates lie well inside it,
+  instead of 2 x 2 tiles (about 390 km).
+
 ## 0.5.1
-- The marker has 46 icons to pick from and eleven colours (orange, yellow, cyan and pink are new), and **Own colour (hex)**
-  takes any colour as #RRGGBB. Tessera offers a plugin no icon grid or colour wheel, so these are a list and a text.
+- The marker has 46 icons to pick from and eleven colours (orange, yellow, cyan and pink are new), and Tessera offers a plugin
+  no icon grid or colour wheel, so these are lists.
 - **Smooth radar** and **Show snow** are gone from the options (the radar is always smoothed and shows snow): fewer
   options leave room on a tile within Tessera's limit of 12. A tile of an earlier version that shows the error when an
   option is changed must be deleted and added again once.

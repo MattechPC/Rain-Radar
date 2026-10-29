@@ -101,8 +101,6 @@
     "mc_orange": "Pomarańczowy",
     "mc_yellow": "Żółty",
     "mc_cyan": "Turkusowy",
-    "mc_pink": "Różowy",
-    "marker_hex": "Własny kolor (hex)",
-    "marker_hex_hint": "Dowolny kolor jako #RRGGBB, np. #FF8800; zastępuje kolor z listy powyżej. Zostaw puste, aby użyć listy. Tessera nie ma koła kolorów dla opcji wtyczki, więc wybierz kolor w dowolnym próbniku kolorów i wpisz tu jego kod."
+    "mc_pink": "Różowy"
   }
 }

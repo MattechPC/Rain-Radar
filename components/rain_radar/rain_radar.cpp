@@ -24,7 +24,7 @@ static const char *const RADAR_HOST = "https://tilecache.rainviewer.com";
 static const int MIN_ZOOM = 2;
 static const int MAX_ZOOM = 7;        // RainViewer's limit for radar tiles
 static const int MAX_ICONS = 36;      // the backdrop's icons at most
-static const double CENTRE_SHARE = 0.5;       // Auto keeps the centred block only when it covers at least this share of the room
+static const double CENTRE_SHARE = 0.3;       // Auto keeps the centred window only when it covers at least this share of the room
 static const double CENTRE_TOLERANCE = 0.06;   // in the Auto setting the coordinates lie this share of the room's size from its middle at most
 static const int MAX_CELLS = 4;       // a layer has at most 4 places (2 layers fit the 8 places of a tile)
 static const int MAX_AGE = 3600;      // a frame older than an hour is called old: RainViewer lists two hours at most
@@ -40,31 +40,6 @@ static bool parse_degrees(const char *text, double limit, double *out) {
   while (end && (*end == ' ' || *end == '\t')) ++end;
   if (!end || end == s.c_str() || *end != '\0' || !std::isfinite(value) || std::fabs(value) > limit) return false;
   *out = value;
-  return true;
-}
-
-// A colour typed as "#RRGGBB", "RRGGBB" or "#RGB". False when the text is not one (then the preset colour is used).
-static bool parse_hex(const std::string &text, uint8_t *r, uint8_t *g, uint8_t *b) {
-  size_t from = (!text.empty() && text[0] == '#') ? 1 : 0;
-  const size_t len = text.size() - from;
-  if (len != 6 && len != 3) return false;
-  int v[6] = {0, 0, 0, 0, 0, 0};
-  for (size_t i = 0; i < len; ++i) {
-    const char ch = text[from + i];
-    if (ch >= '0' && ch <= '9') v[i] = ch - '0';
-    else if (ch >= 'a' && ch <= 'f') v[i] = ch - 'a' + 10;
-    else if (ch >= 'A' && ch <= 'F') v[i] = ch - 'A' + 10;
-    else return false;
-  }
-  if (len == 3) {
-    *r = static_cast<uint8_t>(v[0] * 17);
-    *g = static_cast<uint8_t>(v[1] * 17);
-    *b = static_cast<uint8_t>(v[2] * 17);
-  } else {
-    *r = static_cast<uint8_t>(v[0] * 16 + v[1]);
-    *g = static_cast<uint8_t>(v[2] * 16 + v[3]);
-    *b = static_cast<uint8_t>(v[4] * 16 + v[5]);
-  }
   return true;
 }
 
@@ -121,7 +96,9 @@ class Panel {
     int top = 0;
     if (map_) {
       // What the map covers: the block of tiles.
-      const int mx0 = x0_px_, my0 = y0_px_, mx1 = x0_px_ + cols_ * tile_, my1 = y0_px_ + rows_ * tile_;
+      const int bx0 = x0_px_, by0 = y0_px_, bx1 = x0_px_ + cols_ * tile_, by1 = y0_px_ + rows_ * tile_;
+      // What of the block is shown: the whole of it, or the window round the coordinates (centred).
+      const int mx0 = cx_ - hx_, my0 = cy_ - hy_, mx1 = cx_ + hx_, my1 = cy_ + hy_;
       // The ground under everything, in the colour of the look the map has (the card's own when it follows the screen).
       ground_ = cover(parent, ground_role(), 0, 0, width_, room_h);
       // The layers, from the back to the front: the map, then the radar over it; each is cols x rows places.
@@ -136,6 +113,13 @@ class Panel {
             (layer == 0 ? map_places_ : radar_places_)[j * cols_ + i] = place;
           }
         }
+      }
+      // The block's part outside the window is covered with the ground, so the map is a window evenly round the coordinates.
+      {
+        const int rects[4][4] = {{bx0, by0, bx1 - bx0, my0 - by0}, {bx0, my1, bx1 - bx0, by1 - my1},
+                                 {bx0, my0, mx0 - bx0, my1 - my0}, {mx1, my0, bx1 - mx1, my1 - my0}};
+        for (int k = 0; k < 4; ++k)
+          if (rects[k][2] > 0 && rects[k][3] > 0) masks_[k] = cover(parent, ground_role(), rects[k][0], rects[k][1], rects[k][2], rects[k][3]);
       }
       // The backdrop: weather icons in the free part of the room, at various angles, none over the map. 
       decorate(parent, room_h, mx0, my0, mx1, my1);
@@ -306,26 +290,27 @@ class Panel {
   bool choose_layout(int room_h) {
     pick_grid(room_h);
     const int fill_cols = cols_, fill_rows = rows_;
+    const bool squarish = width_ * 4 <= room_h * 5 && room_h * 4 <= width_ * 5;
     bool centred = false;
     if (cfg_.center) {
       cols_ = rows_ = 2;
       const double tol = cfg_.center_auto ? CENTRE_TOLERANCE : 0.0;
-      int tiles[3] = {0, 0, 0}, best_tile = 0;
+      double area[3] = {0, 0, 0}, best_area = 0;
       for (int more = 0; more <= 2 && cfg_.zoom + more <= MAX_ZOOM; ++more) {
         zoom_ = cfg_.zoom + more;
         locate();
-        if (layout_centred(room_h, tol)) tiles[more] = tile_;
-        best_tile = std::max(best_tile, tiles[more]);
+        if (layout_centred(room_h, tol)) area[more] = static_cast<double>(hx_) * hy_;
+        best_area = std::max(best_area, area[more]);
       }
-      // The closest-in zoom (the most local map) whose block is not clearly smaller (85%) than the largest one.
+      // The closest-in zoom (the most local map) whose window is not clearly smaller (85%) than the largest one.
       int best_zoom = 0;
       for (int more = 0; more <= 2; ++more)
-        if (tiles[more] > 0 && tiles[more] * 100 >= best_tile * 85) best_zoom = cfg_.zoom + more;
+        if (area[more] > 0 && area[more] * 100 >= best_area * 85) best_zoom = cfg_.zoom + more;
       if (best_zoom > 0) {
         zoom_ = best_zoom;
         locate();
         centred = layout_centred(room_h, tol);
-        if (centred && cfg_.center_auto && static_cast<double>(tile_) * tile_ * cols_ * rows_ < CENTRE_SHARE * width_ * room_h) centred = false;
+        if (centred && cfg_.center_auto && 4.0 * hx_ * hy_ < CENTRE_SHARE * width_ * room_h) centred = false;
       }
     }
     if (!centred) {
@@ -334,6 +319,15 @@ class Panel {
       zoom_ = cfg_.center_auto ? std::min(MAX_ZOOM, cfg_.zoom + 2) : cfg_.zoom;
       cols_ = fill_cols;
       rows_ = fill_rows;
+      if (cfg_.center_auto && squarish) {
+        // One tile fills a squarish room (about 190 km across at zoom 7) when the coordinates lie well inside it.
+        cols_ = rows_ = 1;
+        locate();
+        if (px_ < 0.25 || px_ > 0.75 || py_ < 0.25 || py_ > 0.75) {
+          cols_ = fill_cols;
+          rows_ = fill_rows;
+        }
+      }
       locate();
       if (!layout_fill(room_h)) return false;
     }
@@ -391,6 +385,13 @@ class Panel {
     y0_px_ = std::max(0, std::min(room_h - rows_ * tile_, room_h / 2 - oy));
     dot_x_ = x0_px_ + ox;
     dot_y_ = y0_px_ + oy;
+    // The part of the block shown: a window around the coordinates, as far as the nearest edge of the block lets it go on
+    // every side, so that the map lies evenly round them. The rest of the block is hidden under the ground (masks).
+    cx_ = dot_x_;
+    cy_ = dot_y_;
+    hx_ = static_cast<int>(std::floor(std::min(px_, cols_ - px_) * tile_));
+    hy_ = static_cast<int>(std::floor(std::min(py_, rows_ - py_) * tile_));
+    if (2 * std::min(hx_, hy_) < ui::mm(12)) return false;
     return true;
   }
 
@@ -402,6 +403,10 @@ class Panel {
     y0_px_ = (room_h - rows_ * tile_) / 2;
     dot_x_ = x0_px_ + static_cast<int>(std::lround(px_ * tile_));
     dot_y_ = y0_px_ + static_cast<int>(std::lround(py_ * tile_));
+    hx_ = cols_ * tile_ / 2;
+    hy_ = rows_ * tile_ / 2;
+    cx_ = x0_px_ + hx_;
+    cy_ = y0_px_ + hy_;
     return true;
   }
 
@@ -448,6 +453,8 @@ class Panel {
   // The ground, the masks of the window and the backdrop's icons take the colours of the look again.
   void paint_backdrop() {
     if (ground_) lv_obj_set_style_bg_color(ground_, theme::color(ground_role()), 0);
+    for (lv_obj_t *mask : masks_)
+      if (mask) lv_obj_set_style_bg_color(mask, theme::color(ground_role()), 0);
     for (int k = 0; k < icon_count_; ++k)
       if (icons_[k]) lv_obj_set_style_text_color(icons_[k], theme::color(icon_role()), 0);
   }
@@ -474,8 +481,6 @@ class Panel {
 
   // The marker's colour: roles of the theme, the tones of Tessera for red and green.
   lv_color_t marker_colour() const {
-    uint8_t r = 0, g = 0, b = 0;
-    if (parse_hex(cfg_.marker_hex, &r, &g, &b)) return lv_color_make(r, g, b);   // the person's own colour
     const std::string &c = cfg_.marker_color;
     if (c == "red") return ui::tone_color(tessera::Tone::ALERT, theme::ACCENT);
     if (c == "green") return ui::tone_color(tessera::Tone::GOOD, theme::ACCENT);
@@ -499,14 +504,14 @@ class Panel {
   const tessera::Plugin *plugin_ = nullptr;
   Config cfg_;
   int zoom_ = 6, cols_ = 2, rows_ = 2, width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
-  int x0_px_ = 0, y0_px_ = 0, dot_x_ = 0, dot_y_ = 0;
+  int x0_px_ = 0, y0_px_ = 0, dot_x_ = 0, dot_y_ = 0, cx_ = 0, cy_ = 0, hx_ = 0, hy_ = 0;   // hx_, hy_: half the window shown
   int icon_count_ = 0;
   bool map_ = false, centred_ = false;
   double px_ = 1, py_ = 1;
   uint32_t frame_at_ = 0;
   tessera::Text path_, wait_, note_text_;   // kept as long as the card: PSRAM first (docs/FIRMWARE_API.md, "Memory")
   lv_obj_t *map_places_[MAX_CELLS]{}, *radar_places_[MAX_CELLS]{};
-  lv_obj_t *ground_{}, *icons_[MAX_ICONS]{}, *icon_{}, *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
+  lv_obj_t *masks_[4]{}, *ground_{}, *icons_[MAX_ICONS]{}, *icon_{}, *veil_{}, *ring_{}, *dot_{}, *status_{}, *credit_{}, *note_{};
 };
 
 // The options of a tile, with the defaults and limits applied.
@@ -526,7 +531,6 @@ static Config read_config(JsonObjectConst options) {
   JsonVariantConst dim = options["dim"];
   c.dim = dim.isNull() ? 40 : std::max(0, std::min(80, dim.as<int>()));
   c.marker_color = std::string(options["marker_color"] | "blue");
-  c.marker_hex = std::string(options["marker_hex"] | "");
   c.smooth = true;   // the radar is always smoothed and shows snow in its own colours
   c.snow = true;
   const std::string look = options["look"] | "auto";

@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.5.1
+version: 0.5.2
 # 0.13 is the first API with pictures on a card (the tile opens a card with the map over the whole glass).
 api: "0.13"
 icon: weather-pouring
@@ -78,7 +78,6 @@ tiles:
                     { value: briefcase, label: mi_briefcase }, { value: rocket, label: mi_rocket }, { value: wifi, label: mi_wifi }] }
       - { id: marker_color, kind: choice, label: marker_color, hint: marker_color_hint, default: blue,
           choices: [{ value: blue, label: mc_blue }, { value: red, label: mc_red }, { value: green, label: mc_green }, { value: amber, label: mc_amber }, { value: purple, label: mc_purple }, { value: orange, label: mc_orange }, { value: yellow, label: mc_yellow }, { value: cyan, label: mc_cyan }, { value: pink, label: mc_pink }, { value: white, label: mc_white }, { value: black, label: mc_black }] }
-      - { id: marker_hex, kind: text, label: marker_hex, hint: marker_hex_hint, default: "" }
 
 cards:
   # The map over the whole glass, opened by a tap on the tile when its option Open full screen on tap is on.

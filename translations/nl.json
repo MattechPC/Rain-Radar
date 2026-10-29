@@ -94,8 +94,6 @@
     "mc_orange": "Oranje",
     "mc_yellow": "Geel",
     "mc_cyan": "Turquoise",
-    "mc_pink": "Roze",
-    "marker_hex": "Eigen kleur (hex)",
-    "marker_hex_hint": "Elke kleur als #RRGGBB, zoals #FF8800; die vervangt de kleur hierboven. Laat leeg om de lijst te gebruiken. Tessera heeft geen kleurenwiel voor de opties van een plug-in: kies een kleur in een kleurkiezer en typ de code hier."
+    "mc_pink": "Roze"
   }
 }

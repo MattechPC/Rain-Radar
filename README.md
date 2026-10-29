@@ -34,8 +34,9 @@ Weather data by [RainViewer](https://www.rainviewer.com).
 - **Coordinates in the middle** has three settings (the dot is exactly in the middle with *On* and within 6% of the tile's size of it with *Auto*). *On* moves the map until your coordinates are the middle of the tile
   and hides the part that does not lie evenly around them; so that the window around them is not tiny, the map is also
   zoomed in by up to two levels (never past 7) when that gives a larger window. *Auto* (the default) does so only when
-  the window keeps at least half of the tile; otherwise it fills the tile, zoomed in by up to two levels (never past 7), so that
-  the area around the coordinates stays within about 100 to 190 km whatever the shape of the tile.
+  the window keeps at least 30% of the tile; otherwise it fills the tile, zoomed in by up to two levels (never past 7), and on
+  a squarish tile with a single map tile (about 190 km across) when the coordinates lie well inside it, so that the area
+  around the coordinates stays within about 100 to 190 km whatever the shape of the tile.
   *Off* always fills the tile. If a tile that you made with an older version shows an error when you change options, delete
   it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
   this version no longer uses.
@@ -63,6 +64,5 @@ you chose are; nothing else of your home. No key and no account are involved. Th
 
 ## Marker
 **Marker** takes the standard dot, no marker or one of 46 icons from the list (a pin's tip is on the coordinates, any other
-icon's middle). **Marker colour** has eleven colours; **Own colour (hex)** takes any colour as `#RRGGBB` and replaces the list.
-Tessera's options for a plugin are a text, a list, a number or a switch: there is no icon grid or colour wheel for them, so
-the icon is picked from a list and an own colour is typed as a code (any colour picker gives one).
+icon's middle). **Marker colour** has eleven colours. Tessera's options for a plugin are a text, a list, a number or a
+switch, so there is no icon grid or colour wheel for them.

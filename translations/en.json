@@ -103,8 +103,6 @@
     "mc_orange": "Orange",
     "mc_yellow": "Yellow",
     "mc_cyan": "Cyan",
-    "mc_pink": "Pink",
-    "marker_hex": "Own colour (hex)",
-    "marker_hex_hint": "Any colour as #RRGGBB, such as #FF8800; it replaces the colour above. Leave it empty to use the list. Tessera has no colour wheel for a plugin's options, so pick a colour in any colour picker and type its code here."
+    "mc_pink": "Pink"
   }
 }
