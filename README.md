@@ -31,14 +31,14 @@ Weather data by [RainViewer](https://www.rainviewer.com).
   per tile), so a map cannot be cut to the exact shape of a tile: it takes the shape of 2 × 2, 3 × 1, 4 × 1 or upright
   tiles that covers most of the tile, and what it does not cover shows a quiet backdrop of weather icons in the theme's
   colours (dark screen, dark backdrop).
-- **Coordinates in the middle** has three settings (the dot is exactly in the middle with *On* and within 6% of the tile's size of it with *Auto*). *On* moves the map until your coordinates are the middle of the tile
-  and hides the part that does not lie evenly around them; so that the window around them is not tiny, the map is also
-  zoomed in by up to two levels (never past 7) when that gives a larger window. *Auto* (the default) does so only when
-  the window keeps at least 30% of the tile; otherwise it fills the tile, zoomed in by up to two levels (never past 7), and on
-  a squarish tile with a single map tile (about 190 km across) when the coordinates lie well inside it, so that the area
-  around the coordinates stays within about 100 to 190 km whatever the shape of the tile.
-  *Off* always fills the tile. If a tile that you made with an older version shows an error when you change options, delete
-  it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
+- **Coordinates in the middle** has three settings. *Auto* (the default) always fills at least 80% of the tile (where the
+  shapes of tile and map allow it): it tries the zoom you chose and up to two levels closer (never past 7) and several
+  blocks of map tiles, also one tile or a row of tiles stretched over the whole tile, each tile then cut at the top and
+  bottom (at the sides for a column), and takes the one that puts your coordinates nearest the middle. A block of several rows
+  and columns is never stretched, since its tiles would not meet. *On* puts the coordinates exactly in the middle and shows
+  a window evenly round them (the rest of the block lies under the backdrop), which can be small. *Off* fills the tile with
+  the coordinates where they fall. If a tile that you made with an older version shows an error when you change options,
+  delete it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
   this version no longer uses.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.

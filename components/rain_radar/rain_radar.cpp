@@ -96,7 +96,7 @@ class Panel {
     int top = 0;
     if (map_) {
       // What the map covers: the block of tiles.
-      const int bx0 = x0_px_, by0 = y0_px_, bx1 = x0_px_ + cols_ * tile_, by1 = y0_px_ + rows_ * tile_;
+      const int bx0 = x0_px_, by0 = y0_px_, bx1 = x0_px_ + cols_ * cw_, by1 = y0_px_ + rows_ * ch_;
       // What of the block is shown: the whole of it, or the window round the coordinates (centred).
       const int mx0 = cx_ - hx_, my0 = cy_ - hy_, mx1 = cx_ + hx_, my1 = cy_ + hy_;
       // The ground under everything, in the colour of the look the map has (the card's own when it follows the screen).
@@ -107,8 +107,8 @@ class Panel {
         for (int j = 0; j < rows_; ++j) {
           for (int i = 0; i < cols_; ++i) {
             lv_obj_t *place = ui::picture(parent);
-            lv_obj_set_size(place, tile_, tile_);
-            lv_obj_set_pos(place, x0_px_ + i * tile_, y0_px_ + j * tile_);
+            lv_obj_set_size(place, cw_, ch_);
+            lv_obj_set_pos(place, x0_px_ + i * cw_, y0_px_ + j * ch_);
             lv_obj_set_style_radius(place, 0, 0);   // square corners: no card colour showing between the tiles
             (layer == 0 ? map_places_ : radar_places_)[j * cols_ + i] = place;
           }
@@ -286,12 +286,16 @@ class Panel {
   //    it be, and the map is zoomed in (up to two levels, never past 7) when that gives a larger block or the same size
   //    and a closer view.
   //  * On: the same, with the coordinates exactly in the middle.
-  // The whole block is always shown (nothing is cut away), so the map is never smaller than the block that fits.
+  // (Auto is layout_auto: at least 80% of the room, the coordinates as near its middle as that allows.)
   bool choose_layout(int room_h) {
     pick_grid(room_h);
     const int fill_cols = cols_, fill_rows = rows_;
     const bool squarish = width_ * 4 <= room_h * 5 && room_h * 4 <= width_ * 5;
     bool centred = false;
+    if (cfg_.center && cfg_.center_auto && layout_auto(room_h)) {
+      centred_ = false;
+      return true;
+    }
     if (cfg_.center) {
       cols_ = rows_ = 2;
       const double tol = cfg_.center_auto ? CENTRE_TOLERANCE : 0.0;
@@ -332,6 +336,92 @@ class Panel {
       if (!layout_fill(room_h)) return false;
     }
     centred_ = centred;
+    return true;
+  }
+
+  // Auto: the map fills at least 80% of the room, as near to its middle as that lets the coordinates be. The candidates are the
+  // zooms from the chosen one to two levels closer (never past 7) and the blocks of tiles that fit: squares of one size (2 x 2,
+  // 3 x 1 and so on, a little smaller than the room allows, so that the block can move), and a block stretched to the whole
+  // room: one tile for a room of any shape, or a row (a column) of tiles whose cells are wider than they are high (higher than
+  // wide), each tile then cut at the top and bottom (at the sides), which leaves the row (the column) in one piece. A block of
+  // several rows and columns is never stretched: each of its tiles would be cut at its own middle and the joins would not
+  // meet. The picture is enlarged as far as that takes. The best candidate has its coordinates nearest the middle of the room
+  // (a closer zoom and a smaller enlargement count a little). False when none fits.
+  bool layout_auto(int room_h) {
+    const int W = width_, H = room_h;
+    struct Shape {
+      int c, r;
+      bool stretch;
+    };
+    static const Shape shapes[] = {{1, 1, true}, {2, 1, true}, {3, 1, true}, {4, 1, true}, {1, 2, true}, {1, 3, true}, {1, 4, true},
+                                   {2, 2, false}, {2, 1, false}, {3, 1, false}, {4, 1, false}, {1, 2, false}, {1, 3, false}, {1, 4, false}};
+    double best = 1e9;
+    int bz = 0, bc = 0, br = 0, bcw = 0, bch = 0, bx0 = 0, by0 = 0, bdx = 0, bdy = 0;
+    // The closer zooms first; only when none of them gives a block of 80% (the coordinates would lie out of sight) the zooms
+    // farther out than chosen are tried.
+    for (int pass = 0; pass < 2 && best > 1e8; ++pass)
+    for (int z = pass == 0 ? cfg_.zoom : std::max(MIN_ZOOM, cfg_.zoom - 2); z <= (pass == 0 ? std::min(MAX_ZOOM, cfg_.zoom + 2) : cfg_.zoom - 1); ++z) {
+      for (const Shape &s : shapes) {
+        zoom_ = z;
+        cols_ = s.c;
+        rows_ = s.r;
+        locate();
+        int sizes[4][2];
+        int n = 0;
+        if (s.stretch) {
+          const int cw = W / s.c, ch = H / s.r;
+          if (s.c > 1 && cw < ch) continue;   // a row of tiles is cut at the top and bottom: its cells are wider than high
+          if (s.r > 1 && ch < cw) continue;   // a column, at the sides: higher than wide
+          sizes[n][0] = cw;
+          sizes[n][1] = ch;
+          ++n;
+        } else {
+          const int t0 = std::min(W / s.c, H / s.r);
+          for (int share : {100, 95, 90, 85}) {
+            sizes[n][0] = sizes[n][1] = t0 * share / 100;
+            ++n;
+          }
+        }
+        for (int k = 0; k < n; ++k) {
+          const int cw = sizes[k][0], ch = sizes[k][1];
+          if (cw < 1 || ch < 1) continue;
+          const int bw = s.c * cw, bh = s.r * ch;
+          if (static_cast<double>(bw) * bh < 0.8 * W * H) continue;
+          const double u = std::max(cw, ch);   // pixels of a whole tile's side
+          // Where the coordinates lie from the block's corner: along an axis of several tiles the tiles are whole; along one
+          // tile the cell shows its middle part only, the coordinates keeping their distance from the middle.
+          const double rx = s.c == 1 ? cw / 2.0 + (px_ - 0.5) * u : px_ * u;
+          const double ry = s.r == 1 ? ch / 2.0 + (py_ - 0.5) * u : py_ * u;
+          const double margin = ui::mm(2);
+          if (rx < margin || rx > bw - margin || ry < margin || ry > bh - margin) continue;   // out of sight, or at the edge
+          const int x0 = std::max(0, std::min(W - bw, static_cast<int>(std::lround(W / 2.0 - rx))));
+          const int y0 = std::max(0, std::min(H - bh, static_cast<int>(std::lround(H / 2.0 - ry))));
+          const int dx = x0 + static_cast<int>(std::lround(rx)), dy = y0 + static_cast<int>(std::lround(ry));
+          const double off = std::max(std::fabs(dx - W / 2.0) / W, std::fabs(dy - H / 2.0) / H);
+          const double score = off + 0.01 * (u / 256.0) - 0.01 * (z - cfg_.zoom);
+          if (score < best) {
+            best = score;
+            bz = z; bc = s.c; br = s.r; bcw = cw; bch = ch; bx0 = x0; by0 = y0; bdx = dx; bdy = dy;
+          }
+        }
+      }
+    }
+    if (!bz) return false;
+    zoom_ = bz;
+    cols_ = bc;
+    rows_ = br;
+    locate();
+    cw_ = bcw;
+    ch_ = bch;
+    tile_ = std::max(bcw, bch);
+    x0_px_ = bx0;
+    y0_px_ = by0;
+    dot_x_ = bdx;
+    dot_y_ = bdy;
+    hx_ = bc * bcw / 2;
+    hy_ = br * bch / 2;
+    cx_ = bx0 + hx_;
+    cy_ = by0 + hy_;
     return true;
   }
 
@@ -387,6 +477,7 @@ class Panel {
     dot_y_ = y0_px_ + oy;
     // The part of the block shown: a window around the coordinates, as far as the nearest edge of the block lets it go on
     // every side, so that the map lies evenly round them. The rest of the block is hidden under the ground (masks).
+    cw_ = ch_ = tile_;
     cx_ = dot_x_;
     cy_ = dot_y_;
     hx_ = static_cast<int>(std::floor(std::min(px_, cols_ - px_) * tile_));
@@ -403,6 +494,7 @@ class Panel {
     y0_px_ = (room_h - rows_ * tile_) / 2;
     dot_x_ = x0_px_ + static_cast<int>(std::lround(px_ * tile_));
     dot_y_ = y0_px_ + static_cast<int>(std::lround(py_ * tile_));
+    cw_ = ch_ = tile_;
     hx_ = cols_ * tile_ / 2;
     hy_ = rows_ * tile_ / 2;
     cx_ = x0_px_ + hx_;
@@ -503,7 +595,7 @@ class Panel {
 
   const tessera::Plugin *plugin_ = nullptr;
   Config cfg_;
-  int zoom_ = 6, cols_ = 2, rows_ = 2, width_ = 0, height_ = 0, tile_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
+  int zoom_ = 6, cols_ = 2, rows_ = 2, width_ = 0, height_ = 0, tile_ = 0, cw_ = 0, ch_ = 0, x0_ = 0, y0_ = 0, radar_size_ = 256;
   int x0_px_ = 0, y0_px_ = 0, dot_x_ = 0, dot_y_ = 0, cx_ = 0, cy_ = 0, hx_ = 0, hy_ = 0;   // hx_, hy_: half the window shown
   int icon_count_ = 0;
   bool map_ = false, centred_ = false;
@@ -602,7 +694,7 @@ void RainRadar::setup() {
   // The ids are the manifest's: the core makes a RadarTile for every card of the page that shows one, and a RadarCard
   // when the tile opens it.
   add_tile("radar", [this]() { return new RadarTile(this); });
-  add_card("radar_card", [this]() { return new RadarCard(this); });
+  add_card("radar_card", [this]() { return new RadarCard(this); }, true);   // wide, as the manifest says: the whole glass
 }
 
 }  // namespace esphome::rain_radar

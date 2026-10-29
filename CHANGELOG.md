@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.3
+- Auto now fills at least 80% of the tile (where the shapes allow it), as near the middle as that lets the coordinates be:
+  it tries the zoom chosen and up to two levels closer and several blocks, among them one tile, or a row (a column) of tiles,
+  stretched over the whole tile and cut at the top and bottom (at the sides). A small tile no longer shows a small map.
+- The full-screen card is wide, as the manifest says (the plugin did not ask for it), so the map and its backdrop take the
+  whole glass instead of a square.
+
 ## 0.5.2
 - The option **Own colour (hex)** of 0.5.1 is gone again: it was a 13th key on a tile that already held 12, which Tessera
   refuses ("Invalid or unsupported page configuration fields" when a colour was changed). The options are now the same
