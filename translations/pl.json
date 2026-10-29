@@ -36,13 +36,9 @@
     "fullscreen_hint": "Dotknięcie mapy otwiera ją na całym ekranie. Wyłączone nie robi nic po dotknięciu.",
     "dim": "Przyciemnienie w trybie ciemnym",
     "dim_hint": "Jak mocno tryb ciemny przyciemnia mapę, w procentach. 0 zostawia ją jasną.",
-    "centering": "Współrzędne na środku",
-    "centering_hint": "Włączone ustawia współrzędne dokładnie na środku; mapa jest wtedy oknem wokół nich i może być mała. Auto robi to tylko gdy okno pozostaje duże, a w przeciwnym razie wypełnia kafelek. Wyłączone zawsze wypełnia kafelek, a kropka pokazuje miejsce.",
     "centering_on": "Włączone",
     "centering_auto": "Auto",
     "centering_off": "Wyłączone",
-    "marker_icon": "Znacznik",
-    "marker_icon_hint": "Standardowa kropka albo ikona z listy.",
     "marker_color": "Kolor znacznika",
     "marker_color_hint": "Kolor kropki lub ikony.",
     "mi_dot": "Kropka",
@@ -66,8 +62,12 @@
     "mc_purple": "Fioletowy",
     "mc_white": "Biały",
     "mc_black": "Czarny",
-    "tiles": "Numery kafelków",
-    "tiles_hint": "Pokazuje numery kafelka mapy (zoom/x/y) po godzinie, do porównania z openstreetmap.org.",
-    "mi_none": "Bez znacznika"
+    "mi_none": "Bez znacznika",
+    "center": "Współrzędne na środku",
+    "center_hint": "Włączone ustawia współrzędne dokładnie na środku; mapa jest wtedy oknem wokół nich i może być mała. Auto robi to tylko gdy okno pozostaje duże, a w przeciwnym razie wypełnia kafelek. Wyłączone zawsze wypełnia kafelek, a kropka pokazuje miejsce.",
+    "marker": "Znacznik",
+    "marker_hint": "Standardowa kropka albo ikona z listy.",
+    "smooth": "Wygładzony radar",
+    "smooth_hint": "Lekko rozmywa dane radaru."
   }
 }

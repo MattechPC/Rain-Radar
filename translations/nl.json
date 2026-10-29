@@ -36,7 +36,6 @@
     "fullscreen_hint": "Een tik op de kaart opent hem over het hele scherm. Uit doet niets bij een tik.",
     "dim": "Dimmen in de donkere weergave",
     "dim_hint": "Hoe sterk de donkere weergave de kaart donkerder maakt, in procent. 0 laat hem licht.",
-    "marker_icon": "Markering",
     "marker_color": "Kleur van de markering",
     "mi_dot": "Stip",
     "mi_pin": "Speld",
@@ -54,6 +53,9 @@
     "mc_purple": "Paars",
     "mc_white": "Wit",
     "mc_black": "Zwart",
-    "mi_none": "Geen markering"
+    "mi_none": "Geen markering",
+    "marker": "Markering",
+    "smooth": "Gladde radar",
+    "smooth_hint": "Maakt de radargegevens iets zachter."
   }
 }

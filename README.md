@@ -26,19 +26,24 @@ Weather data by [RainViewer](https://www.rainviewer.com).
 
 ## Good to know
 
-- The map is made of up to four OpenStreetMap tiles with the radar's tiles exactly over them. Tessera can show a picture
-  only whole, and only inside the tile (at most 8 pictures per tile), so a map cannot be cut to the exact shape of a
-  tile. What the map tiles do not cover shows a quiet backdrop of weather icons and range rings in the theme's colours, so the
-  tile and the full-screen card do not look empty. **Coordinates in the middle** has three settings. *On* moves the map until your coordinates are the middle of the
-  tile and hides the part that does not lie evenly around them; that window can be much smaller than the tile. *Auto*
-  does so only when the window keeps at least 60% of what the filling map would show. *Off*, and Auto when the window
-  would be small, give a map of up to four tiles (2 × 2, 3 × 1, 4 × 1 or upright) that covers most of the tile, with the
-  dot where the coordinates are.
+- The map is made of up to four OpenStreetMap tiles with the radar's tiles exactly over them, every tile a square of the
+  same size so that they always join. Tessera can show a picture only whole and only inside the tile (at most 8 pictures
+  per tile), so a map cannot be cut to the exact shape of a tile: it takes the shape of 2 × 2, 3 × 1, 4 × 1 or upright
+  tiles that covers most of the tile, and what it does not cover shows a quiet backdrop of weather icons in the theme's
+  colours (dark screen, dark backdrop).
+- **Coordinates in the middle** has three settings. *On* moves the map until your coordinates are the middle of the tile
+  and hides the part that does not lie evenly around them; so that the window around them is not tiny, the map is also
+  zoomed in by up to two levels (never past 7) when that gives a larger window. *Auto* (the default) does so only when
+  the window keeps at least half of the tile and otherwise fills the tile with the dot where the coordinates are.
+  *Off* always fills the tile. If a tile that you made with an older version shows an error when you change options, delete
+  it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
+  this version no longer uses.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light
-  look, so in the dark look it is dimmed with a dark veil, the radar with it. A black map like Home Assistant's would need a provider's account key, so it is not offered. **Show the map** off shows**Show the map** off shows**Show the map** off shows
-  the radar alone on the card's colour.
+  look, so in the dark look it is dimmed with a dark veil, the radar with it, as strongly as **Dimming in the dark look**
+  says. A black map like Home Assistant's would need a provider's account key, so it is not offered. **Show the map**
+  off shows the radar alone on the card's colour.
 - A screen without the memory for pictures (the CYD, the Waveshare 3.5-inch, the Hosyond 4-inch) shows the coordinates
   and the credits in words instead of the map.
 - RainViewer's radar covers where weather radars exist; elsewhere the map shows without rain.

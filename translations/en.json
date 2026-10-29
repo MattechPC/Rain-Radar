@@ -38,13 +38,9 @@
     "fullscreen_hint": "A tap on the map opens it over the whole screen. Off does nothing on a tap.",
     "dim": "Dimming in the dark look",
     "dim_hint": "How much the dark look darkens the map, in percent. 0 leaves it light.",
-    "centering": "Coordinates in the middle",
-    "centering_hint": "On keeps the coordinates exactly in the middle; the map is then a window around them and can be small. Auto does so only when the window stays large and otherwise fills the tile. Off always fills the tile, and the dot shows the place.",
     "centering_on": "On",
     "centering_auto": "Auto",
     "centering_off": "Off",
-    "marker_icon": "Marker",
-    "marker_icon_hint": "The standard dot, or an icon from the list.",
     "marker_color": "Marker colour",
     "marker_color_hint": "The colour of the dot or icon.",
     "mi_dot": "Dot",
@@ -68,8 +64,12 @@
     "mc_purple": "Purple",
     "mc_white": "White",
     "mc_black": "Black",
-    "tiles": "Tile numbers",
-    "tiles_hint": "Shows the numbers of the map tile (zoom/x/y) after the time, to check the map against openstreetmap.org.",
-    "mi_none": "No marker"
+    "mi_none": "No marker",
+    "center": "Coordinates in the middle",
+    "center_hint": "On keeps the coordinates exactly in the middle; the map is then a window around them and can be small. Auto does so only when the window stays large and otherwise fills the tile. Off always fills the tile, and the dot shows the place.",
+    "marker": "Marker",
+    "marker_hint": "The standard dot, or an icon from the list.",
+    "smooth": "Smooth radar",
+    "smooth_hint": "Blurs the radar data a little."
   }
 }

@@ -1,9 +1,16 @@
-## 0.4.3
-- Fix configuration validation errors on slider options.
-- Fix map sizing to cover 100% of tile area.
-- Fix background color binding to theme::dark.
-
 # Changelog
+
+## 0.5.0
+- Fixes the error "Invalid or unsupported page configuration fields" when changing options: Tessera keeps at most 12 options
+  on a tile, and a tile that carried the names of 0.4.2's options (centering, marker_icon, tiles) went over it. The
+  options keep the names of 0.4.0 where they had one (center, marker, smooth), so a tile of any older version stays within
+  the limit; delete a tile that already shows the error and add it again once. **Tile numbers** is gone.
+- The map's tiles are squares again, of one size, so they always join: stretching them to the shape of a wide tile cut
+  every tile at its edges and put the wrong places next to each other.
+- **Coordinates in the middle** zooms in by up to two levels (never past 7) when that gives a larger window, and the Auto
+  setting (the default) keeps the centred window only when it fills at least half of the tile.
+- The ground and the backdrop under the map follow the screen's look again (dark screen, dark backdrop).
+- Numbers of the options (zoom, dimming) are read whether Tessera sends them as whole numbers or decimals.
 
 ## 0.4.2
 - **Marker**: the standard dot in a colour of your choice, or an icon from a list (pin, home, crosshair, car, ...), or
