@@ -2,7 +2,7 @@
 # every name, label and hint below is a key into translations/<language>.json, part "app".
 # Every field is explained in docs/MANIFEST.md of the plugins repository (MaxGramser/tessera-plugins).
 id: rain_radar
-version: 0.5.0
+version: 0.5.1
 # 0.13 is the first API with pictures on a card (the tile opens a card with the map over the whole glass).
 api: "0.13"
 icon: weather-pouring
@@ -45,7 +45,7 @@ tiles:
       - { id: lat, kind: text, label: lat, hint: lat_hint, default: "52.2297" }
       - { id: lon, kind: text, label: lon, hint: lon_hint, default: "21.0122" }
       # RainViewer's radar tiles go to zoom 7 at most; zoom 2 shows about a continent.
-      - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 6, label: zoom, hint: zoom_hint }
+      - { id: zoom, kind: number, min: 2, max: 7, step: 1, default: 7, label: zoom, hint: zoom_hint }
       - { id: look, kind: choice, label: look, hint: look_hint, default: auto,
           choices: [{ value: auto, label: look_auto }, { value: light, label: look_light }, { value: dark, label: look_dark }] }
       # How the dark look dims the light map, in percent.
@@ -58,19 +58,27 @@ tiles:
       # A tap opens the map over the whole screen, as a camera tile of Tessera does.
       - { id: fullscreen, kind: toggle, label: fullscreen, hint: fullscreen_hint, default: true }
       - { id: map, kind: toggle, label: map, hint: map_hint, default: true }
-      # The marker: the standard dot or an icon of Tessera's set, in a colour of the theme.
+      # The marker: the standard dot or an icon of Tessera's set (up to 48 choices), in a colour of the theme or of its own.
       - { id: marker, kind: choice, label: marker, hint: marker_hint, default: dot,
-          choices: [{ value: none, label: mi_none }, { value: dot, label: mi_dot }, { value: pin, label: mi_pin }, { value: pin_outline, label: mi_pin_outline },
-                    { value: home, label: mi_home }, { value: home_pin, label: mi_home_pin }, { value: cross, label: mi_cross },
-                    { value: heart, label: mi_heart }, { value: car, label: mi_car }, { value: tree, label: mi_tree },
-                    { value: person, label: mi_person }, { value: compass, label: mi_compass }, { value: rain, label: mi_rain },
-                    { value: tower, label: mi_tower }, { value: bike, label: mi_bike }] }
+          choices: [{ value: none, label: mi_none }, { value: dot, label: mi_dot }, { value: pin, label: mi_pin },
+                    { value: pin_outline, label: mi_pin_outline }, { value: home, label: mi_home }, { value: home_outline, label: mi_home_outline },
+                    { value: home_pin, label: mi_home_pin }, { value: cross, label: mi_cross }, { value: compass, label: mi_compass },
+                    { value: heart, label: mi_heart }, { value: person, label: mi_person }, { value: group, label: mi_group },
+                    { value: dog, label: mi_dog }, { value: cat, label: mi_cat }, { value: car, label: mi_car },
+                    { value: ev, label: mi_ev }, { value: bike, label: mi_bike }, { value: bus, label: mi_bus },
+                    { value: train, label: mi_train }, { value: plane, label: mi_plane }, { value: run, label: mi_run },
+                    { value: tree, label: mi_tree }, { value: leaf, label: mi_leaf }, { value: flower, label: mi_flower },
+                    { value: sprout, label: mi_sprout }, { value: grass, label: mi_grass }, { value: mower, label: mi_mower },
+                    { value: pool, label: mi_pool }, { value: sun, label: mi_sun }, { value: cloud, label: mi_cloud },
+                    { value: rain, label: mi_rain }, { value: lightning, label: mi_lightning }, { value: snow, label: mi_snow },
+                    { value: water, label: mi_water }, { value: fire, label: mi_fire }, { value: flash, label: mi_flash },
+                    { value: solar, label: mi_solar }, { value: tower, label: mi_tower }, { value: cctv, label: mi_cctv },
+                    { value: eye, label: mi_eye }, { value: shield, label: mi_shield }, { value: bell, label: mi_bell },
+                    { value: lock, label: mi_lock }, { value: garage, label: mi_garage }, { value: package, label: mi_package },
+                    { value: briefcase, label: mi_briefcase }, { value: rocket, label: mi_rocket }, { value: wifi, label: mi_wifi }] }
       - { id: marker_color, kind: choice, label: marker_color, hint: marker_color_hint, default: blue,
-          choices: [{ value: blue, label: mc_blue }, { value: red, label: mc_red }, { value: green, label: mc_green },
-                    { value: amber, label: mc_amber }, { value: purple, label: mc_purple }, { value: white, label: mc_white },
-                    { value: black, label: mc_black }] }
-      - { id: smooth, kind: toggle, label: smooth, hint: smooth_hint, default: true }
-      - { id: snow, kind: toggle, label: snow, hint: snow_hint, default: true }
+          choices: [{ value: blue, label: mc_blue }, { value: red, label: mc_red }, { value: green, label: mc_green }, { value: amber, label: mc_amber }, { value: purple, label: mc_purple }, { value: orange, label: mc_orange }, { value: yellow, label: mc_yellow }, { value: cyan, label: mc_cyan }, { value: pink, label: mc_pink }, { value: white, label: mc_white }, { value: black, label: mc_black }] }
+      - { id: marker_hex, kind: text, label: marker_hex, hint: marker_hex_hint, default: "" }
 
 cards:
   # The map over the whole glass, opened by a tap on the tile when its option Open full screen on tap is on.

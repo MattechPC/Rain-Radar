@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1
+- The marker has 46 icons to pick from and eleven colours (orange, yellow, cyan and pink are new), and **Own colour (hex)**
+  takes any colour as #RRGGBB. Tessera offers a plugin no icon grid or colour wheel, so these are a list and a text.
+- **Smooth radar** and **Show snow** are gone from the options (the radar is always smoothed and shows snow): fewer
+  options leave room on a tile within Tessera's limit of 12. A tile of an earlier version that shows the error when an
+  option is changed must be deleted and added again once.
+- Auto keeps the coordinates within 6% of the middle (was 12%), and when the centred window would be too small it fills
+  the tile zoomed in by up to two levels (never past 7), so about 100 to 190 km around the coordinates show on a square tile
+  too. The default zoom is 7.
+
 ## 0.5.0
 - Fixes the error "Invalid or unsupported page configuration fields" when changing options: Tessera keeps at most 12 options
   on a tile, and a tile that carried the names of 0.4.2's options (centering, marker_icon, tiles) went over it. The

@@ -31,10 +31,11 @@ Weather data by [RainViewer](https://www.rainviewer.com).
   per tile), so a map cannot be cut to the exact shape of a tile: it takes the shape of 2 × 2, 3 × 1, 4 × 1 or upright
   tiles that covers most of the tile, and what it does not cover shows a quiet backdrop of weather icons in the theme's
   colours (dark screen, dark backdrop).
-- **Coordinates in the middle** has three settings. *On* moves the map until your coordinates are the middle of the tile
+- **Coordinates in the middle** has three settings (the dot is exactly in the middle with *On* and within 6% of the tile's size of it with *Auto*). *On* moves the map until your coordinates are the middle of the tile
   and hides the part that does not lie evenly around them; so that the window around them is not tiny, the map is also
   zoomed in by up to two levels (never past 7) when that gives a larger window. *Auto* (the default) does so only when
-  the window keeps at least half of the tile and otherwise fills the tile with the dot where the coordinates are.
+  the window keeps at least half of the tile; otherwise it fills the tile, zoomed in by up to two levels (never past 7), so that
+  the area around the coordinates stays within about 100 to 190 km whatever the shape of the tile.
   *Off* always fills the tile. If a tile that you made with an older version shows an error when you change options, delete
   it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
   this version no longer uses.
@@ -59,3 +60,9 @@ Tessera (the app in Home Assistant, not the screen) asks `api.rainviewer.com` fo
 the radar tiles from `tilecache.rainviewer.com` and the map tiles from `tile.openstreetmap.org`. The map and radar
 servers see the address of your Home Assistant and the map tiles you look at, which show roughly where the coordinates
 you chose are; nothing else of your home. No key and no account are involved. The screen never reaches the internet.
+
+## Marker
+**Marker** takes the standard dot, no marker or one of 46 icons from the list (a pin's tip is on the coordinates, any other
+icon's middle). **Marker colour** has eleven colours; **Own colour (hex)** takes any colour as `#RRGGBB` and replaces the list.
+Tessera's options for a plugin are a text, a list, a number or a switch: there is no icon grid or colour wheel for them, so
+the icon is picked from a list and an own colour is typed as a code (any colour picker gives one).
