@@ -292,10 +292,7 @@ class Panel {
     const int fill_cols = cols_, fill_rows = rows_;
     const bool squarish = width_ * 4 <= room_h * 5 && room_h * 4 <= width_ * 5;
     bool centred = false;
-    if (cfg_.center && cfg_.center_auto && layout_auto(room_h)) {
-      centred_ = false;
-      return true;
-    }
+    if (cfg_.center && cfg_.center_auto && layout_auto(room_h)) return true;
     if (cfg_.center) {
       cols_ = rows_ = 2;
       const double tol = cfg_.center_auto ? CENTRE_TOLERANCE : 0.0;
@@ -339,14 +336,17 @@ class Panel {
     return true;
   }
 
-  // Auto: the map fills at least 80% of the room, as near to its middle as that lets the coordinates be. The candidates are the
-  // zooms from the chosen one to two levels closer (never past 7) and the blocks of tiles that fit: squares of one size (2 x 2,
-  // 3 x 1 and so on, a little smaller than the room allows, so that the block can move), and a block stretched to the whole
-  // room: one tile for a room of any shape, or a row (a column) of tiles whose cells are wider than they are high (higher than
-  // wide), each tile then cut at the top and bottom (at the sides), which leaves the row (the column) in one piece. A block of
-  // several rows and columns is never stretched: each of its tiles would be cut at its own middle and the joins would not
-  // meet. The picture is enlarged as far as that takes. The best candidate has its coordinates nearest the middle of the room
-  // (a closer zoom and a smaller enlargement count a little). False when none fits.
+  // Auto: the best of many layouts, each given a score (the lowest wins). A layout is a zoom, from the one chosen up to 7, and
+  //  - a block of whole map tiles that fills the room (squares of one size, a little smaller than the room allows so that the
+  //    block can move; or stretched over the whole room: one tile for a room of any shape, or a row (a column) of tiles whose
+  //    cells are wider than high (higher than wide), each tile then cut at the top and bottom (at the sides), which leaves the
+  //    row (the column) in one piece; a block of several rows and columns is never stretched, its tiles would not meet), or
+  //  - the same 2 x 2 block with its coordinates exactly in the middle of the room, shown as a window evenly round them (the
+  //    rest lies under the backdrop).
+  // What counts: how much of the room the map covers (80% and more is free, the window's share counts hard below 30%), how
+  // far the coordinates lie from the middle, how far from the coordinates the map reaches at its farthest edge (up to 200 km
+  // is free: zoom 7 shows 190 km in a tile; a map of 700 km, all Poland, is not what this plugin is for) and at its nearest
+  // (the coordinates need about 60 km of map on every side), and a little for how far the picture is enlarged.
   bool layout_auto(int room_h) {
     const int W = width_, H = room_h;
     struct Shape {
@@ -355,14 +355,32 @@ class Panel {
     };
     static const Shape shapes[] = {{1, 1, true}, {2, 1, true}, {3, 1, true}, {4, 1, true}, {1, 2, true}, {1, 3, true}, {1, 4, true},
                                    {2, 2, false}, {2, 1, false}, {3, 1, false}, {4, 1, false}, {1, 2, false}, {1, 3, false}, {1, 4, false}};
+    // How a layout scores: its visible part's share of the room, the coordinates' place in the room, the size of a tile in
+    // pixels, and the visible part's reach from the coordinates on each side (pixels).
+    auto score = [&](int z, double cover, double off, double u, double left, double right, double top, double bottom) {
+      const double km_per_px = 40075.0 * std::cos(cfg_.lat * 3.14159265358979 / 180.0) / std::ldexp(1.0, z) / u;
+      const double far_km = std::max(std::max(left, right), std::max(top, bottom)) * km_per_px;
+      const double near_km = std::min(std::min(left, right), std::min(top, bottom)) * km_per_px;
+      return 1.0 * std::max(0.0, 0.8 - cover) + 2.0 * std::max(0.0, 0.3 - cover) + off + 0.4 * std::max(0.0, (far_km - 200.0) / 200.0) +
+             1.5 * std::max(0.0, (60.0 - near_km) / 60.0) + 0.01 * (u / 256.0);
+    };
     double best = 1e9;
+    bool best_window = false;
     int bz = 0, bc = 0, br = 0, bcw = 0, bch = 0, bx0 = 0, by0 = 0, bdx = 0, bdy = 0;
-    // The closer zooms first; only when none of them gives a block of 80% (the coordinates would lie out of sight) the zooms
-    // farther out than chosen are tried.
-    for (int pass = 0; pass < 2 && best > 1e8; ++pass)
-    for (int z = pass == 0 ? cfg_.zoom : std::max(MIN_ZOOM, cfg_.zoom - 2); z <= (pass == 0 ? std::min(MAX_ZOOM, cfg_.zoom + 2) : cfg_.zoom - 1); ++z) {
+    for (int z = cfg_.zoom; z <= MAX_ZOOM; ++z) {
+      zoom_ = z;
+      // The window: the 2 x 2 block, its coordinates exactly in the middle.
+      cols_ = rows_ = 2;
+      locate();
+      if (layout_centred(room_h, 0.0)) {
+        const double s = score(z, 4.0 * hx_ * hy_ / (static_cast<double>(W) * H), 0.0, tile_, hx_, hx_, hy_, hy_);
+        if (s < best) {
+          best = s;
+          best_window = true;
+          bz = z;
+        }
+      }
       for (const Shape &s : shapes) {
-        zoom_ = z;
         cols_ = s.c;
         rows_ = s.r;
         locate();
@@ -386,7 +404,6 @@ class Panel {
           const int cw = sizes[k][0], ch = sizes[k][1];
           if (cw < 1 || ch < 1) continue;
           const int bw = s.c * cw, bh = s.r * ch;
-          if (static_cast<double>(bw) * bh < 0.8 * W * H) continue;
           const double u = std::max(cw, ch);   // pixels of a whole tile's side
           // Where the coordinates lie from the block's corner: along an axis of several tiles the tiles are whole; along one
           // tile the cell shows its middle part only, the coordinates keeping their distance from the middle.
@@ -398,9 +415,10 @@ class Panel {
           const int y0 = std::max(0, std::min(H - bh, static_cast<int>(std::lround(H / 2.0 - ry))));
           const int dx = x0 + static_cast<int>(std::lround(rx)), dy = y0 + static_cast<int>(std::lround(ry));
           const double off = std::max(std::fabs(dx - W / 2.0) / W, std::fabs(dy - H / 2.0) / H);
-          const double score = off + 0.01 * (u / 256.0) - 0.01 * (z - cfg_.zoom);
-          if (score < best) {
-            best = score;
+          const double sc = score(z, static_cast<double>(bw) * bh / (static_cast<double>(W) * H), off, u, dx - x0, x0 + bw - dx, dy - y0, y0 + bh - dy);
+          if (sc < best) {
+            best = sc;
+            best_window = false;
             bz = z; bc = s.c; br = s.r; bcw = cw; bch = ch; bx0 = x0; by0 = y0; bdx = dx; bdy = dy;
           }
         }
@@ -408,6 +426,13 @@ class Panel {
     }
     if (!bz) return false;
     zoom_ = bz;
+    if (best_window) {
+      cols_ = rows_ = 2;
+      locate();
+      if (!layout_centred(room_h, 0.0)) return false;
+      centred_ = true;
+      return true;
+    }
     cols_ = bc;
     rows_ = br;
     locate();
@@ -422,6 +447,7 @@ class Panel {
     hy_ = br * bch / 2;
     cx_ = bx0 + hx_;
     cy_ = by0 + hy_;
+    centred_ = false;
     return true;
   }
 
