@@ -31,15 +31,17 @@ Weather data by [RainViewer](https://www.rainviewer.com).
   per tile), so a map cannot be cut to the exact shape of a tile: it takes the shape of 2 × 2, 3 × 1, 4 × 1 or upright
   tiles that covers most of the tile, and what it does not cover shows a quiet backdrop of weather icons in the theme's
   colours (dark screen, dark backdrop).
-- **Coordinates in the middle** has three settings. *Auto* (the default) always fills at least 80% of the tile (where the
-  shapes of tile and map allow it): it tries the zoom you chose and up to two levels closer (never past 7) and several
-  blocks of map tiles, also one tile or a row of tiles stretched over the whole tile, each tile then cut at the top and
-  bottom (at the sides for a column), and takes the one that puts your coordinates nearest the middle. A block of several rows
-  and columns is never stretched, since its tiles would not meet. *On* puts the coordinates exactly in the middle and shows
-  a window evenly round them (the rest of the block lies under the backdrop), which can be small. *Off* fills the tile with
-  the coordinates where they fall. If a tile that you made with an older version shows an error when you change options,
-  delete it and add the tile again once: Tessera keeps at most 12 options on a tile, and the old tile still holds names that
-  this version no longer uses.
+- **Coordinates in the middle** has three settings. *Auto* (the default) weighs many layouts and takes the best: the zoom
+  you chose or any closer one (never past 7), a block of map tiles that fills the tile (also one tile, or a row of tiles,
+  stretched over the whole tile and cut at the top and bottom; a block of several rows and columns is never stretched, its
+  tiles would not meet), or the coordinates exactly in the middle with the map as a window round them. What counts: the
+  coordinates near the middle, the map covering most of the tile, and no more than about 200 km of map from the
+  coordinates (a view of all Poland is never chosen) and not less than about 60 km on any side. *On* always puts the
+  coordinates exactly in the middle and shows the window, which can be small. *Off* fills the tile with the coordinates
+  where they fall. Map tiles lie on a fixed grid and Tessera draws a picture only whole and inside the tile, so a map
+  that is both larger and centred on any coordinates is not possible: Auto is the nearest to it. If a tile that you made
+  with an older version shows an error when you change options, delete it and add the tile again once: Tessera keeps at
+  most 12 options on a tile, and the old tile still holds names that this version no longer uses.
 - The radar frame is the newest of the last two hours; RainViewer makes one every ten minutes, and Tessera asks for the
   list every five. The line under the map says the time of the frame, or that it is out of date when it is over an hour old.
 - Light and dark: the tile's own colours follow the screen's look by themselves. OpenStreetMap's map has only a light

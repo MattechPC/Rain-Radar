@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.4
+- Auto weighs many layouts instead of one rule: it can now also choose the coordinates exactly in the middle with the map as
+  a window, and it keeps the map to about 200 km from the coordinates (a square tile no longer shows all Poland) while
+  keeping at least about 60 km of map on every side of them. The zoom candidates are the chosen one and every closer one up to 7.
+
 ## 0.5.3
 - Auto now fills at least 80% of the tile (where the shapes allow it), as near the middle as that lets the coordinates be:
   it tries the zoom chosen and up to two levels closer and several blocks, among them one tile, or a row (a column) of tiles,
